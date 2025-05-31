@@ -10,7 +10,7 @@
     <form asp-action="EnterName" method="post" class="mb-3" id="pokemonForm">
         <div class="mb-2">
             <input asp-for="Name" class="form-control" placeholder="Enter name" />
-            <span asp-validation-for="Name" class="text-danger"></span>
+            <span asp-validation-for="Name" asp-action="SearchResults" class="text-danger"></span>
         </div>
 
         <div class="d-flex gap-2">

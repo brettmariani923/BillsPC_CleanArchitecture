@@ -32,7 +32,7 @@ namespace BillsPC_CleanArchitecture.Data.Implementation
             return _parameters;
         }
 
-        // Your own method to execute the query and return the list
+        // method to execute the query and return the list
         public async Task<IEnumerable<TResponse>> ExecuteAsync()
         {
             var result = await _dbConnection.QueryAsync<TResponse>(GetSql(), GetParameters());

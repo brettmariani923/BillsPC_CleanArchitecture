@@ -6,10 +6,12 @@ namespace BillsPC_CleanArchitecture.Data.Requests.Pokemon
     public class ReturnPokemonLikeRequest : IDataFetchList<Pokemon_DTO>
     {
         private readonly string _namePattern;
+        private readonly int _limit;
 
         public ReturnPokemonLikeRequest(string name, int limit = 250)
         {
             _namePattern = $"%{name}%";
+            _limit = limit;
         }
 
         public string GetSql() => @"
@@ -19,7 +21,8 @@ namespace BillsPC_CleanArchitecture.Data.Requests.Pokemon
 
         public object? GetParameters() => new
         {
-            NamePattern = _namePattern
+            NamePattern = _namePattern,
+            Limit = _limit
         };
     }
 }
