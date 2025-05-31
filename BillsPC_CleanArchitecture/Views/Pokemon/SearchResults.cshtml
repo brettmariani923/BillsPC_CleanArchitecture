@@ -1,0 +1,61 @@
+﻿@model List<BillsPC_CleanArchitecture.Data.DTO.Pokemon_DTO>
+
+@{
+    ViewData["Title"] = "All Pokémon";
+}
+
+<h2>All Pokémon</h2>
+
+@if (!Model.Any())
+{
+    <p>No Pokémon found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>PokemonID</th>
+                <th>Name</th>
+                <th>HP</th>
+                <th>Attack</th>
+                <th>Defense</th>
+                <th>SpecialAttack</th>
+                <th>SpecialDefense</th>
+                <th>Speed</th>
+                <th>Ability</th>
+                <th>Legendary</th>
+                <th>Region</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>
+                        @if (!string.IsNullOrEmpty(p.ImageUrl))
+                        {
+                            <img src="@p.ImageUrl" alt="@p.Name" width="50" />
+                        }
+                        else
+                        {
+                            <span>No image</span>
+                        }
+                    </td>
+                    <td>@p.PokemonID</td>
+                    <td>@p.Name</td>
+                    <td>@p.HP</td>
+                    <td>@p.Attack</td>
+                    <td>@p.Defense</td>
+                    <td>@p.SpecialAttack</td>
+                    <td>@p.SpecialDefense</td>
+                    <td>@p.Speed</td>
+                    <td>@p.Ability</td>
+                    <td>@(p.Legendary ? "Yes" : "No")</td>
+                    <td>@p.Region</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

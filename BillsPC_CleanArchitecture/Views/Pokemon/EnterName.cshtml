@@ -1,0 +1,21 @@
+﻿@model BillsPC_CleanArchitecture.Data.DTO.Pokemon_DTO
+
+@{
+    ViewData["Title"] = "Search Pokémon";
+}
+
+<div class="red-box">
+    <h2>@ViewData["Title"]</h2>
+
+    <form asp-action="EnterName" method="post" class="mb-3" id="pokemonForm">
+        <div class="mb-2">
+            <input asp-for="Name" class="form-control" placeholder="Enter name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary" id="searchBtn">Search</button>
+            <a asp-controller="Pokemon" asp-action="ReturnAllPokemon" class="btn btn-secondary">View All Pokémon</a>
+        </div>
+    </form>
+</div>
