@@ -9,9 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-builder.Configuration.GetConnectionString("DefaultConnection");
-
-
 // Register DI services
 builder.Services.AddScoped<IDataAccess, DataAccess>();
 builder.Services.AddScoped<IDbConnectionFactory>(sp =>

@@ -1,11 +1,11 @@
 ﻿using System.Text.Json;
 using BillsPC_CleanArchitecture.Data.DTO;
 
-
-
-
 namespace BillsPC_CleanArchitecture.Application.Services
 {
+    //We are almost at the end! In this phase, the technicals aren't really relevant for what we're trying to accomplish, but I just wanted to show you how the api gets implemented with the database. 
+    //This isn't important and I dont want to overload you will things that dont matter, but just know that the connection to the api is made in the method below, which fetches the image from the PokeAPI.
+    //For the next step, go back to PokemonService.cs
     public class PokeApiService : IPokeApiService
     {
         private readonly HttpClient _httpClient;
@@ -38,7 +38,6 @@ namespace BillsPC_CleanArchitecture.Application.Services
             await _imageWriteLock.WaitAsync();
             try
             {
-                // Double-check again inside the lock (maybe another thread already wrote it)
                 if (File.Exists(localFilePath))
                     return $"/images/pokemon/{fileName}";
 

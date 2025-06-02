@@ -17,4 +17,8 @@
     <ProjectReference Include="..\BillsPc_CleanArchitecture.Data\BillsPC_CleanArchitecture.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\Pokemon\" />
+  </ItemGroup>
+
 </Project>
