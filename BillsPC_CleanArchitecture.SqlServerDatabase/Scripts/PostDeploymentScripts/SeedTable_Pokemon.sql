@@ -989,8 +989,6 @@ BEGIN
 
     SET IDENTITY_INSERT [dbo].[Pokemon] OFF;
 
-
-
     PRINT 'Finished Populating records in [dbo].[Pokemon]';
 END
 GO

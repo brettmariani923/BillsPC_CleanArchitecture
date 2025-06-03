@@ -17,9 +17,6 @@ builder.Services.AddScoped<IDbConnectionFactory>(sp =>
 builder.Services.AddScoped<IPokemonService, PokemonService>();
 builder.Services.AddHttpClient<IPokeApiService, PokeApiService>();
 
-// Needed for IWebHostEnvironment in constructor injection
-builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline

@@ -7,7 +7,7 @@ namespace BillsPC_CleanArchitecture.Data.Implementation
     // The DataAccess class is responsible for actually executing the SQL commands using Dapper. It doesn't define the queries itself, it gets those from the request objects(in this case ReturnAllPokemonRequest)
     // that implement interfaces like IDataFetchList<T>, IDataFetch<T>, or IDataExecute.
     //
-    // In the example we've been using, the ReturnAllPokemonRequest class implements IDataFetchList<Pokemon_DTO>, which provides the GetSql() and GetParameters() methods. These definitions for SQL query and parameters(SELECT * FROM dbo.pokemon, null) are what that will be used in this step.
+    // In the example we've been using, the ReturnAllPokemonRequest class implements IDataFetchList<Pokemon_DTO>, which provides the GetSql() and GetParameters() methods. The definitions for the SQL query and parameters(SELECT * FROM dbo.pokemon, null) are what that will be used in this step.
     // Now that they've been defined, the FetchListAsync method below (last in Public IdataAcess methods below) takes that request, retrieves the SQL and parameters via the interface, and uses Dapper's QueryAsync<T>() to actually execute it and return the pokemon info
     // we asked for. So to reiterate where we are in the process,
     // the "View All Pokémon" button is pressed, get request --> controller (ReturnAllPokemon()) --> service layer (GetAllPokemonWithImagesAsync())--> data request (ReturnAllPokemonRequest) --> data access layer (You are here, FetchListAsync<TResponse>)
