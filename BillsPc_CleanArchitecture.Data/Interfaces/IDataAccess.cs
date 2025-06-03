@@ -1,5 +1,4 @@
-﻿
-namespace BillsPC_CleanArchitecture.Data.Interfaces
+﻿namespace BillsPC_CleanArchitecture.Data.Interfaces
 {
     public interface IDataAccess
     {

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BillsPC_CleanArchitecture.Data.DTO
+﻿namespace BillsPC_CleanArchitecture.Data.DTO
 {
     internal class Types_DTO
     {

@@ -22,7 +22,6 @@ namespace BillsPC_CleanArchitecture.Application.Services
                 Directory.CreateDirectory(_imageCacheFolder);
         }
 
-
         private static readonly SemaphoreSlim _imageWriteLock = new(1, 1);
 
         public async Task<string?> GetPokemonImageUrlAsync(string name)

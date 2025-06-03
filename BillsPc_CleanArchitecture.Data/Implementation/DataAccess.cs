@@ -1,8 +1,6 @@
 ﻿using BillsPC_CleanArchitecture.Data.Interfaces;
 using System.Data;
 using Dapper;
-using BillsPC_CleanArchitecture.Data.DTO;
-using System.Collections.Generic;
 
 namespace BillsPC_CleanArchitecture.Data.Implementation
 {

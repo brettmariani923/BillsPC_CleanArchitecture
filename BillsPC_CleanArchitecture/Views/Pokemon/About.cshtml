@@ -1,33 +1,30 @@
 ﻿@{
-    ViewBag.Title = "About This Pokémon Website"; 
+    ViewBag.Title = "About This Website";
 }
-
 <div class="red-box">
     <h1>@ViewBag.Title</h1>
 
     <p>
-        Welcome to my Pokémon Database! This website provides detailed information on all Pokémon species up to Generation 8, covering a total of 926 Pokémon.
+        Welcome to my Pokémon Database! This site offers detailed information on all Pokémon species up to Generation 8 — a total of 926 entries.
     </p>
 
     <p>
-        The base stats and all other Pokémon data — such as types, abilities, and additional attributes — are stored in the bottom of the application. These are bulk inserts for your database. This database contains every column of information except for the images.
-        You will have to update the settings in appsettings.json to connect to your database.
+        The core data for the application — including base stats, types, abilities, and other attributes — is stored in a structured database. Bulk insert scripts are provided at the bottom of the application. To get started, simply create a database, connect it to the application, and then run the files located at the bottom of the SQLServer layer, first in the tables section to create the table, and then for the corresponding SeedTable to populate it. Be sure to configure your connection string correctly in the <code>appsettings.json</code> file within the <code>BillsPC_CleanArchitecture.Api</code> project. The database includes every column of Pokémon data except for the image files.
     </p>
 
     <p>
-        Pokémon images are dynamically retrieved from <a href="https://pokeapi.co" target="_blank" rel="noopener noreferrer">PokeAPI</a>, a reliable public API that provides official artwork and sprites.
-		Because we are pulling over 900 images from PokeAPI, the first time you select View All Pokemon, it can take up to 120 seconds. After this the files will be cached within the application, and it will be much faster on subsequent requests.
+        Images are dynamically loaded from the <a href="https://pokeapi.co" target="_blank" rel="noopener noreferrer">PokeAPI</a> — a trusted public API that serves official artwork and sprites. Since the site fetches artwork for over 900 Pokémon, the initial load when selecting “View All Pokémon” may take up to 120 seconds. After this, the images are cached locally for significantly faster access.
     </p>
 
     <p>
-        To help with searches, if you’re unsure of the exact spelling of a Pokémon's name, just type the first letter or part of the name and the site will suggest results close to your input.
+        For easier searching, the search box supports partial matches. Just type the beginning of a Pokémon’s name, and the site will suggest relevant results.
     </p>
 
     <p>
-        My goal is to provide an easy-to-navigate, searchable, and accurate resource for Pokémon fans and collectors. I hope you find it useful!
+        This project was created to offer Pokémon fans and collectors a reliable, searchable, and easy-to-use resource. I hope you find it helpful and enjoyable to use!
     </p>
 
     <p>
-        If you have any questions or suggestions, feel free to <a href="">contact me</a>.
+        Have feedback or questions? Feel free to <a href="https://discord.com/channels/brett_mariani/">reach out to me on Discord</a>.
     </p>
 </div>

@@ -60,14 +60,11 @@
     <Folder Include="DBO\Tables" />
     <Folder Include="Scripts" />
     <Folder Include="Scripts\PostDeploymentScripts" />
+    <Folder Include="PublishLocations" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DBO\Tables\Pokemon.sql" />
-    <None Include="DBO\Tables\PokemonTypes.sql" />
-    <None Include="DBO\Tables\Types.sql" />
     <None Include="Scripts\PostDeploymentScripts\SeedTable_Pokemon.sql" />
-    <None Include="Scripts\PostDeploymentScripts\SeedTable_PokemonTypes.sql" />
-    <None Include="Scripts\PostDeploymentScripts\SeedTable_Types.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Scripts\PostDeploymentScripts\Script.PostDeployment.sql" />
