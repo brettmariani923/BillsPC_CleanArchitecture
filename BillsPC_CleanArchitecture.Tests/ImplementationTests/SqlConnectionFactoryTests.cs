@@ -1,12 +1,12 @@
 ﻿using BillsPC_CleanArchitecture.Data.Implementation;
+using Final_BillsPC.Data.Tests.Helpers;
 
 namespace BillsPC_CleanArchitecture.Data.Tests
 {
     public class SqlConnectionFactoryTests
     {
         [Theory]
-        [InlineData("Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;")]
-        [InlineData("Server=myServerAddress;Database=myDataBase;Trusted_Connection=True;")]
+        [MemberData(nameof(Hidden.ConnectionStrings), MemberType = typeof(Hidden))]
         public void SqlConnectionFactory_Given_ConnectionString_IsValid_NewConnection_ShouldReturn_SqlConnection(string connectionString)
         {
             var connectionFactory = new SqlConnectionFactory(connectionString);

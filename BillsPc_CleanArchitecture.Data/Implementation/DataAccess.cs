@@ -14,7 +14,7 @@ namespace BillsPC_CleanArchitecture.Data.Implementation
     // --> Dapper executes the query and returns the results.
     //
     // This might seem overly complicated or like a huge pain, but by setting it up like this it separates the query definition (ReturnAllPokemonRequest) from the query execution (DataAccess). By doing it like this, we have a separation of concerns that we dont get in other patterns.
-    // it ends up being a lot more flexible, maintainable, and most of all its a lot safer. Because the SQL statement is separated from execution logic, it keeps responsibilities clearly divided and makes it easier to maintain.
+    // it ends up being a lot more flexible, maintainable, and most of all its a lot safer. Because the SQL statement is separated from the execution logic, it keeps responsibilities clearly divided and makes it easier to maintain.
     // Only known request types are allowed to use the DataAccess class, which is a lot safer than just having it all in one place where any code could execute any SQL command. 
     //
     //Breifly I want to go over the Pokemon_DTO class, I dont think it warrants an entire visit. Its basically just the data structure of a Pokémon in the application. It contains properties like Id, Name, Type, and ImageUrl, that are populated by the database, and used to transfer that data

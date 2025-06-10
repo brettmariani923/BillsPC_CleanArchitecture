@@ -24,10 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DataRequestTests\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\BillsPc_CleanArchitecture.Data\BillsPC_CleanArchitecture.Data.csproj" />
   </ItemGroup>
 
