@@ -1,6 +1,7 @@
 ﻿using BillsPC_CleanArchitecture.Data.Interfaces;
 using BillsPC_CleanArchitecture.Data.DTO;
 using BillsPC_CleanArchitecture.Data.Requests.Pokemon;
+using BillsPC_CleanArchitecture.Data.Requests;
 
 //PART 1: This is where the controller facciltates getting the data it needs. For example, using the GetAllPokemonWithImagesAsync method (last method down below),
 //once the user has pressed The "View All Pokemon" button on the webpage and caused a get request, it causes the controller to call to the service layer(here).
@@ -33,7 +34,7 @@ public class PokemonService : IPokemonService
 
     private async Task AddImagesToPokemonListAsync(List<Pokemon_DTO> pokemonList)
     {
-        var semaphore = new SemaphoreSlim(50);
+        var semaphore = new SemaphoreSlim(50, 50);
 
         var tasks = pokemonList.Select(async p =>
         {
@@ -51,25 +52,32 @@ public class PokemonService : IPokemonService
         await Task.WhenAll(tasks);
     }
 
+    public async Task AddImagesToCurrentTeamListAsync(List<CurrentTeam_DTO> pokemonList)
+    {
+        var semaphore = new SemaphoreSlim(50, 50);
+
+        var tasks = pokemonList.Select(async p =>
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                p.ImageUrl = await _pokeApiService.GetPokemonImageUrlAsync(p.Name);     // regular image
+                p.SpriteUrl = await _pokeApiService.GetPokemonSpriteUrlAsync(p.Name);   // animated sprite
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        await Task.WhenAll(tasks);
+    }
+
     public async Task<List<Pokemon_DTO>> GetAllPokemonAsync()
     {
         var request = new ReturnAllPokemonRequest();
         var result = await _dataAccess.FetchListAsync<Pokemon_DTO>(request);
         return result.ToList();
-    }
-
-    public async Task<List<Pokemon_DTO>> SearchPokemonByNameAsync(string name)
-    {
-        var request = new ReturnPokemonLikeRequest(name);
-        var result = await _dataAccess.FetchListAsync<Pokemon_DTO>(request);
-        return result.ToList();
-    }
-    public async Task<List<Pokemon_DTO>> SearchPokemonByNameWithImagesAsync(string name)
-    {
-        var request = new ReturnPokemonLikeRequest(name);
-        var results = (await _dataAccess.FetchListAsync<Pokemon_DTO>(request)).ToList();
-        await AddImagesToPokemonListAsync(results);
-        return results;
     }
 
     public async Task<List<Pokemon_DTO>> GetAllPokemonWithImagesAsync()
@@ -80,4 +88,44 @@ public class PokemonService : IPokemonService
         return pokemon;
     }
 
+    public async Task<List<Pokemon_DTO>> SearchPokemonByNameAsync(string name)
+    {
+        var request = new ReturnPokemonLikeRequest(name);
+        var result = await _dataAccess.FetchListAsync<Pokemon_DTO>(request);
+        return result.ToList();
+    }
+
+    public async Task<List<Pokemon_DTO>> SearchPokemonByNameWithImagesAsync(string name)
+    {
+        var request = new ReturnPokemonLikeRequest(name);
+        var results = (await _dataAccess.FetchListAsync<Pokemon_DTO>(request)).ToList();
+        await AddImagesToPokemonListAsync(results);
+        return results;
+    }
+
+    public async Task<List<CurrentTeam_DTO>> GetTeamAsync()
+    {
+        var request = new ReturnCurrentTeamRequest();
+        var pokemon = (await _dataAccess.FetchListAsync<CurrentTeam_DTO>(request)).ToList();
+        await AddImagesToCurrentTeamListAsync(pokemon);
+        return pokemon;
+    }
+
+    public async Task AddPokemonToTeamAsync(int slot, int pokemonId)
+    {
+        var request = new InsertToCurrentTeamRequest(slot, pokemonId);
+        await _dataAccess.ExecuteAsync(request);
+    }
+
+    public async Task RemovePokemonFromTeamAsync(int slot)
+    {
+        var request = new RemoveFromTeamRequest(slot);
+        await _dataAccess.ExecuteAsync(request);
+    }
+
+    public async Task UpdatePokemonInTeamAsync(int slot, int pokemonId)
+    {
+        var request = new UpdateCurrentTeamRequest(slot, pokemonId);
+        await _dataAccess.ExecuteAsync(request);
+    }
 }

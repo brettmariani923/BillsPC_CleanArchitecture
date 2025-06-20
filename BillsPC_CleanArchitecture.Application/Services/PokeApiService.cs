@@ -63,6 +63,83 @@ namespace BillsPC_CleanArchitecture.Application.Services
             return $"/images/pokemon/{fileName}";
         }
 
+        public async Task<string?> GetPokemonSpriteUrlAsync(string name)
+        {
+            var fileName = $"{name.ToLower()}-sprite.png";
+            var localFilePath = Path.Combine(_imageCacheFolder, fileName);
+
+            // Return if already downloaded
+            if (File.Exists(localFilePath))
+                return $"/images/pokemon/{fileName}";
+
+            await _imageWriteLock.WaitAsync();
+            try
+            {
+                if (File.Exists(localFilePath))
+                    return $"/images/pokemon/{fileName}";
+
+                var response = await _httpClient.GetAsync($"https://pokeapi.co/api/v2/pokemon/{name.ToLower()}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                var json = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var data = JsonSerializer.Deserialize<PokeApiResponse>(json, options);
+
+                var imageUrl = data?.Sprites?.FrontDefault;
+                if (string.IsNullOrEmpty(imageUrl))
+                    return null;
+
+                var imageBytes = await _httpClient.GetByteArrayAsync(imageUrl);
+                await File.WriteAllBytesAsync(localFilePath, imageBytes);
+            }
+            finally
+            {
+                _imageWriteLock.Release();
+            }
+
+            return $"/images/pokemon/{fileName}";
+        }
+
+        public async Task<string?> GetAnimatedSpriteUrlAsync(string name)
+        {
+            var fileName = $"{name.ToLower()}-sprite.gif"; // many animated sprites are .gif
+            var localFilePath = Path.Combine(_imageCacheFolder, fileName);
+
+            if (File.Exists(localFilePath))
+                return $"/images/pokemon/{fileName}";
+
+            await _imageWriteLock.WaitAsync();
+            try
+            {
+                if (File.Exists(localFilePath))
+                    return $"/images/pokemon/{fileName}";
+
+                var response = await _httpClient.GetAsync($"https://pokeapi.co/api/v2/pokemon/{name.ToLower()}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                var json = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var data = JsonSerializer.Deserialize<PokeApiResponse>(json, options);
+
+                // Pull animated gif from generation-v
+                var spriteUrl = data?.Sprites?.Versions?.GenerationV?.BlackWhite?.Animated?.FrontDefault;
+                if (string.IsNullOrEmpty(spriteUrl))
+                    return null;
+
+                var imageBytes = await _httpClient.GetByteArrayAsync(spriteUrl);
+                await File.WriteAllBytesAsync(localFilePath, imageBytes);
+            }
+            finally
+            {
+                _imageWriteLock.Release();
+            }
+
+            return $"/images/pokemon/{fileName}";
+        }
+
+
     }
 
 }

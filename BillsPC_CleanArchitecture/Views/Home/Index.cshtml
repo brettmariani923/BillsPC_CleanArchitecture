@@ -1,8 +1,10 @@
-﻿@{
+﻿@model List<BillsPC_CleanArchitecture.Data.DTO.CurrentTeam_DTO>
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
+<div class="text-center mb-4">
     <div style="border: 2px solid red; display: inline-block; padding: 10px; border-radius: 8px;">
         <h1 class="display-4"><strong>  Bill's PC  </strong></h1>
     </div>
@@ -11,5 +13,19 @@
     <img src="~/images/220px-Red_on_computer.png" class="mx-auto d-block" alt="Red using a computer" />
 </div>
 
-
-
+@if (Model != null && Model.Count > 0)
+{
+    <div class="d-flex justify-content-center align-items-end mb-5" style="gap: 20px;">
+        @foreach (var pokemon in Model)
+        {
+            <div class="text-center">
+                <img src="@pokemon.SpriteUrl" alt="@pokemon.Name" width="96" height="96" />
+                <div class="small text-muted">@pokemon.Name</div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="text-center">You haven't selected any Pokémon yet. Head to the <a href="/CurrentTeam">Team Builder</a> to get started!</p>
+}

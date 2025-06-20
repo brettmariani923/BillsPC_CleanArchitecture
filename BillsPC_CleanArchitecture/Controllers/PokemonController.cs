@@ -51,5 +51,10 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             return View();
         }
 
+        public async Task<IActionResult> Index()
+        {
+            var team = await _pokemonService.GetTeamAsync();
+            return View(team); // ← pass team data to the home view
+        }
     }
 }

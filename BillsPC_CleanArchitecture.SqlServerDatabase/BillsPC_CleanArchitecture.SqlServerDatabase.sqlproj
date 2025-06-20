@@ -65,6 +65,7 @@
   <ItemGroup>
     <None Include="DBO\Tables\Pokemon.sql" />
     <None Include="Scripts\PostDeploymentScripts\SeedTable_Pokemon.sql" />
+    <None Include="DBO\Tables\CurrentTeam.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Scripts\PostDeploymentScripts\Script.PostDeployment.sql" />

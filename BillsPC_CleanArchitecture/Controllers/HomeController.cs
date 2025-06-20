@@ -1,32 +1,33 @@
-using System.Diagnostics;
-using BillsPC_CleanArchitecture.Models;
 using Microsoft.AspNetCore.Mvc;
+using BillsPC_CleanArchitecture.Data.Interfaces;
+using BillsPC_CleanArchitecture.Models; // Make sure you have this if ErrorViewModel is here
+using System.Diagnostics;
 
-namespace BillsPC_CleanArchitecture.Controllers
+public class HomeController : Controller
 {
-    public class HomeController : Controller
+    private readonly ILogger<HomeController> _logger;
+    private readonly IPokemonService _pokemonService;
+
+    public HomeController(ILogger<HomeController> logger, IPokemonService pokemonService)
     {
-        private readonly ILogger<HomeController> _logger;
+        _logger = logger;
+        _pokemonService = pokemonService;
+    }
 
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
+    public async Task<IActionResult> Index()
+    {
+        var team = await _pokemonService.GetTeamAsync();
+        return View(team);
+    }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+    public IActionResult Privacy()
+    {
+        return View();
+    }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

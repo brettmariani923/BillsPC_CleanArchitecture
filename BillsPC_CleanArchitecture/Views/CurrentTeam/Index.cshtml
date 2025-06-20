@@ -1,0 +1,75 @@
+﻿<div class="container my-4">
+    <div class="card shadow-sm p-4" style="max-width: 720px; margin: 0 auto; border: 3px solid red; border-radius: 8px;">
+        <h2>@ViewData["Title"]</h2>
+
+        <table class="table table-bordered table-striped table-sm mb-4">
+            <thead>
+                <tr>
+                    <th style="width: 50px; align-items: center">Slot</th>
+                    <th style="width: 120px;">Pokemon</th>
+                    <th style="width: 90px;">Sprite</th>
+                    <th style="width: 250px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var member in Model)
+                {
+                    <tr>
+                        <td>@member.Slot</td>
+                        <td>@member.Name</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(member.ImageUrl))
+                            {
+                                <img src="@member.ImageUrl" alt="@member.Name" style="width: 72px; height: 72px;" />
+                            }
+                            else
+                            {
+                                <span>No Image</span>
+                            }
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <div style="display: flex; gap: 7px; align-items: center; height: 100%; margin: 4px;">
+                                <input type="text"
+                                       name="pokemonName"
+                                       placeholder="Pokémon Name"
+                                       required
+                                       style="flex: 1; min-width: 0; height: 32px;" />
+
+                                <form method="post" asp-action="Update" style="margin: 3px;">
+                                    <input type="hidden" name="slot" value="@member.Slot" />
+                                    <button type="submit" class="btn btn-primary btn-sm" style="height: 32px; padding: 0px 12px;">Update</button>
+                                </form>
+
+                                <form method="post" asp-action="Remove" style="margin: 0px;">
+                                    <input type="hidden" name="slot" value="@member.Slot" />
+                                    <button type="submit" class="btn btn-danger btn-sm" style="height: 32px; padding: 0px 12px;">Remove</button>
+                                </form>
+                            </div>
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-center align-items-center mb-3">
+            <form method="post" asp-action="Insert" class="row g-2 align-items-end" style="max-width: 600px; width: 100%;">
+                <div class="col-md-2">
+                    <label for="slot" class="form-label form-label-sm">Slot</label>
+                    <input type="number" name="slot" id="slot" class="form-control form-control-sm" min="1" max="6" required />
+                </div>
+
+                <div class="col-md-5">
+                    <label for="pokemonName" class="form-label form-label-sm">Pokémon Name</label>
+                    <input type="text" name="pokemonName" id="pokemonName" class="form-control form-control-sm" placeholder="e.g. Pikachu" required />
+                </div>
+
+                <input type="hidden" name="pokemonId" id="pokemonId" />
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-success btn-sm w-100 text-nowrap">Add Pokémon</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
