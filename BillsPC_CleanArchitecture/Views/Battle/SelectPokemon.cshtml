@@ -1,0 +1,36 @@
+﻿@model List<BillsPC_CleanArchitecture.Data.DTO.Pokemon_DTO>
+
+@{
+    ViewData["Title"] = "Select Pokémon for Battle";
+}
+<div style="display: inline-block; border: 3px solid red; border-radius: 8px; padding: 16px;">
+
+<h2>Select Pokémon for Battle</h2>
+
+<form method="post" asp-action="StartBattle">
+    <div class="mb-3">
+        <label for="pokemon1Id" class="form-label">Select Pokémon 1</label>
+        <select id="pokemon1Id" name="pokemon1Id" class="form-select" required>
+            <option value="">-- Choose Pokémon --</option>
+            @foreach (var p in Model)
+            {
+                <option value="@p.PokemonID">@p.Name (@p.Region)</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="pokemon2Id" class="form-label">Select Pokémon 2</label>
+        <select id="pokemon2Id" name="pokemon2Id" class="form-select" required>
+            <option value="">-- Choose Pokémon --</option>
+            @foreach (var p in Model)
+            {
+                <option value="@p.PokemonID">@p.Name (@p.Region)</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Start Battle</button>
+    
+</form>
+</div>

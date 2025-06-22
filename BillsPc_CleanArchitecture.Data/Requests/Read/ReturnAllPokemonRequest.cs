@@ -1,7 +1,7 @@
 ﻿using BillsPC_CleanArchitecture.Data.Interfaces;
 using BillsPC_CleanArchitecture.Data.DTO;
 
-namespace BillsPC_CleanArchitecture.Data.Requests.Pokemon
+namespace BillsPC_CleanArchitecture.Data.Requests
 {
     // This class holds the a SQL request object we are going to use to retrieve the data we need from the database. 
     // It doesnt execute the query itself, it just provides the SQL command and any parameters needed for the query.

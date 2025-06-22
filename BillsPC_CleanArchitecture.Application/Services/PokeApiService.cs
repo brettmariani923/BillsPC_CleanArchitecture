@@ -139,6 +139,76 @@ namespace BillsPC_CleanArchitecture.Application.Services
             return $"/images/pokemon/{fileName}";
         }
 
+        public async Task<List<MoveInfo_DTO>> GetPokemonMovesAsync(string pokemonName)
+        {
+            using var http = new HttpClient();
+            string url = $"https://pokeapi.co/api/v2/pokemon/{pokemonName.ToLower()}";
+            var response = await http.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+                return new List<MoveInfo_DTO> {
+            new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal" }
+        };
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            var doc = await JsonDocument.ParseAsync(stream);
+
+            var moves = new List<MoveInfo_DTO>();
+
+            if (doc.RootElement.TryGetProperty("moves", out var movesArray))
+            {
+                foreach (var moveEntry in movesArray.EnumerateArray())
+                {
+                    if (moveEntry.TryGetProperty("move", out var moveObj) &&
+                        moveObj.TryGetProperty("name", out var moveNameProp))
+                    {
+                        var moveName = moveNameProp.GetString();
+                        if (string.IsNullOrWhiteSpace(moveName))
+                            continue;
+
+                        string moveUrl = moveObj.GetProperty("url").GetString() ?? "";
+                        var moveResponse = await http.GetAsync(moveUrl);
+
+                        if (!moveResponse.IsSuccessStatusCode)
+                            continue;
+
+                        using var moveStream = await moveResponse.Content.ReadAsStreamAsync();
+                        var moveDoc = await JsonDocument.ParseAsync(moveStream);
+
+                        int power = 0;
+                        string type = "normal";
+
+                        if (moveDoc.RootElement.TryGetProperty("power", out var powerProp) &&
+                            powerProp.ValueKind == JsonValueKind.Number)
+                        {
+                            power = powerProp.GetInt32();
+                        }
+
+                        if (moveDoc.RootElement.TryGetProperty("type", out var typeObj) &&
+                            typeObj.TryGetProperty("name", out var typeNameProp))
+                        {
+                            type = typeNameProp.GetString() ?? "normal";
+                        }
+
+                        moves.Add(new MoveInfo_DTO
+                        {
+                            Name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(moveName.Replace('-', ' ')),
+                            Power = power,
+                            Type = type
+                        });
+
+                        if (moves.Count >= 4)
+                            break;
+                    }
+                }
+            }
+
+            return moves;
+        }
+
+
+
+
 
     }
 

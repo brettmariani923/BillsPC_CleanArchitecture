@@ -1,0 +1,126 @@
+﻿.battle-container {
+    max-width: 700px;
+    margin: 2rem auto;
+    background: #f7f7f7;
+    border: 3px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pokemon-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.pokemon-box {
+    width: 45%;
+    text-align: center;
+}
+
+.pokemon-name {
+    font-weight: bold;
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.hp-bar-bg {
+    width: 100%;
+    height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    background: #76c043;
+    transition: width 0.5s ease;
+}
+
+.pokemon-sprite {
+    width: 150px;
+    image-rendering: pixelated;
+    transition: transform 0.3s ease;
+}
+
+    /* Attack animations */
+    .pokemon-sprite.attack-forward {
+        transform: translateX(30px);
+    }
+
+    .pokemon-sprite.attack-back {
+        transform: translateX(0);
+    }
+
+/* Shake animation */
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    20%, 60% {
+        transform: translateX(-10px);
+    }
+
+    40%, 80% {
+        transform: translateX(10px);
+    }
+}
+
+.pokemon-sprite.shake {
+    animation: shake 0.5s forwards;
+}
+
+/* Flash animation */
+@keyframes flash {
+    0%, 100% {
+        filter: brightness(100%);
+    }
+
+    50% {
+        filter: brightness(150%);
+    }
+}
+
+.pokemon-sprite.flash {
+    animation: flash 0.3s forwards;
+}
+
+.battle-text {
+    height: 120px;
+    background: #222;
+    color: #eee;
+    font-size: 1.1rem;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    margin-bottom: 1rem;
+}
+
+.moves {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.move-button {
+    flex: 1 1 45%;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 2px solid #444;
+    cursor: pointer;
+    background: #eee;
+    transition: background 0.3s;
+}
+
+    .move-button:hover {
+        background: #ddd;
+    }

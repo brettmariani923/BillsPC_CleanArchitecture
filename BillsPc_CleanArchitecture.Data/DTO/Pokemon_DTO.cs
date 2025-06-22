@@ -14,5 +14,9 @@
         public bool Legendary { get; set; }
         public string Region { get; set; }
         public string ImageUrl { get; set; }
+
+        // ✅ Add these for STAB and type matching
+        public string TypeOne { get; set; } = string.Empty;
+        public string? TypeTwo { get; set; } = null;
     }
 }

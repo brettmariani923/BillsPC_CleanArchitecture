@@ -5,18 +5,18 @@
         <table class="table table-bordered table-striped table-sm mb-4">
             <thead>
                 <tr>
-                    <th style="width: 50px; align-items: center">Slot</th>
-                    <th style="width: 120px;">Pokemon</th>
-                    <th style="width: 90px;">Sprite</th>
-                    <th style="width: 250px;">Actions</th>
+                    <th class="text-center align-middle" style="width: 50px;">Slot</th>
+                    <th class="text-center align-middle" style="width: 120px;">Pokemon</th>
+                    <th class="text-center align-middle" style="width: 90px;">Sprite</th>
+                    <th class="text-center align-middle" style="width: 250px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var member in Model)
                 {
                     <tr>
-                        <td>@member.Slot</td>
-                        <td>@member.Name</td>
+                        <td class="text-center align-middle">@member.Slot</td>
+                        <td class="text-center align-middle">@member.Name</td>
                         <td>
                             @if (!string.IsNullOrEmpty(member.ImageUrl))
                             {
@@ -46,11 +46,11 @@
                                 </form>
                             </div>
                         </td>
-
                     </tr>
                 }
             </tbody>
         </table>
+
         <div class="d-flex justify-content-center align-items-center mb-3">
             <form method="post" asp-action="Insert" class="row g-2 align-items-end" style="max-width: 600px; width: 100%;">
                 <div class="col-md-2">
@@ -73,3 +73,4 @@
 
     </div>
 </div>
+
