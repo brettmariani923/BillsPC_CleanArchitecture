@@ -155,6 +155,13 @@
             }, 100); // slight delay to let the DOM settle
         }
     });
+      window.addEventListener('DOMContentLoaded', () => {
+    const battleText = document.getElementById('battleText');
+    if (battleText) {
+      // Scroll to the bottom smoothly
+battleText.scrollTo({ top: battleText.scrollHeight, behavior: 'smooth' });
+    }
+  });
 </script>
 
 </div>

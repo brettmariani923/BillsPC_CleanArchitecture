@@ -83,7 +83,6 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             if (pokemon2CurrentHP < 0) pokemon2CurrentHP = 0;
 
             logBuilder.AppendLine($"{p1.Name} used {selectedMove.Name} and dealt {damage} damage!");
-            logBuilder.AppendLine($"{p2.Name} has {pokemon2CurrentHP} HP left.");
 
             return View("Index", new BattleViewModel
             {
@@ -125,7 +124,6 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             if (pokemon1CurrentHP < 0) pokemon1CurrentHP = 0;
 
             logBuilder.AppendLine($"{p2.Name} used {aiMove.Name} and dealt {damage} damage!");
-            logBuilder.AppendLine($"{p1.Name} has {pokemon1CurrentHP} HP left.");
 
             return View("Index", new BattleViewModel
             {
@@ -166,5 +164,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             // Add real type chart logic later; for now, return 1.0 (neutral)
             return 1.0;
         }
+
+
     }
 }
