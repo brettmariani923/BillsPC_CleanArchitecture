@@ -14,10 +14,15 @@ namespace BillsPC_CleanArchitecture.Api.Models
         public List<MoveInfo_DTO> Pokemon1Moves { get; set; } = new();
         public List<MoveInfo_DTO> Pokemon2Moves { get; set; } = new();
 
-        public string ImageUrl { get; set; }
+        public string Pokemon1Status { get; set; } = "";  // ← NEW
+        public string Pokemon2Status { get; set; } = "";  // ← NEW
+
         public string BattleLog { get; set; } = "";
         public bool IsPlayerOneTurn { get; set; }
         public bool BattleOver { get; set; }
+        public int Pokemon1SleepCounter { get; set; } = 0;
+        public int Pokemon2SleepCounter { get; set; } = 0;
 
     }
+
 }

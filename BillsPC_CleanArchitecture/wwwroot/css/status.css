@@ -1,0 +1,5 @@
+﻿.status-effect {
+    font-weight: bold;
+    color: #d9534f; /* Red-ish for status */
+    margin-left: 6px;
+}

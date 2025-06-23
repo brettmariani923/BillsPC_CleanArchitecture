@@ -91,16 +91,18 @@
 }
 
 .battle-text {
-    height: 120px;
-    background: #222;
-    color: #eee;
+    height: 60px;
+    font-family: monospace;
     font-size: 1.1rem;
-    padding: 1rem;
-    border-radius: 6px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    margin-bottom: 1rem;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 2px solid black;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
 
 .moves {
     display: flex;

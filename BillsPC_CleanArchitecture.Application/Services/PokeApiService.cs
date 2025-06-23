@@ -146,19 +146,34 @@ namespace BillsPC_CleanArchitecture.Application.Services
             var response = await http.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
-                return new List<MoveInfo_DTO> {
+            {
+                return new List<MoveInfo_DTO>
+        {
             new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal" }
         };
+            }
 
             using var stream = await response.Content.ReadAsStreamAsync();
             var doc = await JsonDocument.ParseAsync(stream);
 
-            var moves = new List<MoveInfo_DTO>();
+            var moves = new List<(MoveInfo_DTO Move, int Level)>();
 
             if (doc.RootElement.TryGetProperty("moves", out var movesArray))
             {
                 foreach (var moveEntry in movesArray.EnumerateArray())
                 {
+                    // Look inside version_group_details for learn method
+                    var versionDetails = moveEntry.GetProperty("version_group_details");
+
+                    var levelUpEntry = versionDetails.EnumerateArray()
+                        .FirstOrDefault(detail =>
+                            detail.GetProperty("move_learn_method").GetProperty("name").GetString() == "level-up");
+
+                    if (levelUpEntry.ValueKind == JsonValueKind.Undefined)
+                        continue;
+
+                    int levelLearned = levelUpEntry.GetProperty("level_learned_at").GetInt32();
+
                     if (moveEntry.TryGetProperty("move", out var moveObj) &&
                         moveObj.TryGetProperty("name", out var moveNameProp))
                     {
@@ -177,6 +192,7 @@ namespace BillsPC_CleanArchitecture.Application.Services
 
                         int power = 0;
                         string type = "normal";
+                        bool isSpecial = false;
 
                         if (moveDoc.RootElement.TryGetProperty("power", out var powerProp) &&
                             powerProp.ValueKind == JsonValueKind.Number)
@@ -190,23 +206,34 @@ namespace BillsPC_CleanArchitecture.Application.Services
                             type = typeNameProp.GetString() ?? "normal";
                         }
 
-                        moves.Add(new MoveInfo_DTO
+                        if (moveDoc.RootElement.TryGetProperty("damage_class", out var damageClassProp) &&
+                            damageClassProp.TryGetProperty("name", out var damageClassName))
                         {
-                            Name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(moveName.Replace('-', ' ')),
-                            Power = power,
-                            Type = type
-                        });
+                            isSpecial = damageClassName.GetString() == "special";
+                        }
 
-                        if (moves.Count >= 4)
-                            break;
+                        moves.Add((
+                            new MoveInfo_DTO
+                            {
+                                Name = System.Globalization.CultureInfo.CurrentCulture.TextInfo
+                                    .ToTitleCase(moveName.Replace('-', ' ')),
+                                Power = power,
+                                Type = type,
+                                IsSpecial = isSpecial
+                            },
+                            levelLearned
+                        ));
                     }
                 }
             }
 
-            return moves;
+            // Sort by level learned and return only first 4
+            return moves
+                .OrderBy(m => m.Level)
+                .Take(4)
+                .Select(m => m.Move)
+                .ToList();
         }
-
-
 
 
 
