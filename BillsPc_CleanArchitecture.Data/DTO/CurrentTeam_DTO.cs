@@ -15,6 +15,7 @@
         public bool Legendary { get; set; }
         public string Region { get; set; }
         public string ImageUrl { get; set; }
-        public string SpriteUrl { get; set; } 
+        public string SpriteUrl { get; set; }
+        public int CurrentHP { get; set; }    // Add this to track HP during battle
     }
 }

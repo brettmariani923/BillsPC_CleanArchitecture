@@ -40,6 +40,12 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 return View("SelectPokemon", allPokemon.ToList());
             }
 
+            // Initialize CurrentHP to full HP for all Pokémon on both teams
+            foreach (var p in playerTeam)
+                p.CurrentHP = p.HP;
+            foreach (var p in aiTeam)
+                p.CurrentHP = p.HP;
+
             var playerActive = playerTeam[0];
             var aiActive = aiTeam[0];
 
@@ -52,8 +58,8 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 AITeam = aiTeam,
                 PlayerActiveIndex = 0,
                 AIActiveIndex = 0,
-                PlayerCurrentHP = playerActive.HP,
-                AICurrentHP = aiActive.HP,
+                PlayerCurrentHP = playerActive.CurrentHP,
+                AICurrentHP = aiActive.CurrentHP,
                 PlayerMoves = playerMoves,
                 AIMoves = aiMoves,
                 BattleLog = $"The battle begins! {playerActive.Name} vs {aiActive.Name}\n",
@@ -78,6 +84,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                     PokemonID = p.PokemonID,
                     Name = p.Name,
                     HP = p.HP,
+                    CurrentHP = p.HP, // Initialize CurrentHP here too
                     Attack = p.Attack,
                     Defense = p.Defense,
                     SpecialAttack = p.SpecialAttack,
@@ -100,7 +107,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             int pokemon1SleepCounter, int pokemon2SleepCounter,
             string battleLog,
             string playerTeamJson, string aiTeamJson,
-            int? switchTo)  // <-- Added nullable switchTo here
+            int? switchTo)  // Nullable switch index for switching
         {
             // Decode from Base64
             var playerJson = Encoding.UTF8.GetString(Convert.FromBase64String(playerTeamJson));
@@ -116,7 +123,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             {
                 int newActiveIndex = switchTo.Value;
 
-                if (newActiveIndex >= 0 && newActiveIndex < playerTeam.Count && playerTeam[newActiveIndex].HP > 0)
+                if (newActiveIndex >= 0 && newActiveIndex < playerTeam.Count && playerTeam[newActiveIndex].CurrentHP > 0)
                 {
                     var oldActiveName = playerTeam[activeSlot1].Name;
                     var newActive = playerTeam[newActiveIndex];
@@ -132,7 +139,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                         AITeam = aiTeam,
                         PlayerActiveIndex = newActiveIndex,
                         AIActiveIndex = activeSlot2,
-                        PlayerCurrentHP = newActive.HP,
+                        PlayerCurrentHP = newActive.CurrentHP, // Use current HP here
                         AICurrentHP = pokemon2CurrentHP,
                         PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(newActive.Name),
                         AIMoves = pTwoMoves,
@@ -213,6 +220,9 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             model.AICurrentHP = Math.Max(0, model.AICurrentHP - damage);
             logBuilder.AppendLine($"{p1.Name} used {selectedMove.Name} and dealt {damage} damage!");
 
+            // Update AI Pokémon current HP in team list
+            model.AITeam[model.AIActiveIndex].CurrentHP = model.AICurrentHP;
+
             // Apply status effects
             string aiStatus = model.AIStatus;
             int aiSleep = model.AISleepCounter;
@@ -227,7 +237,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             {
                 logBuilder.AppendLine($"{p2.Name} fainted!");
 
-                int nextIndex = aiTeam.FindIndex(i => i.HP > 0 && aiTeam.IndexOf(i) != model.AIActiveIndex);
+                int nextIndex = aiTeam.FindIndex(i => i.CurrentHP > 0 && aiTeam.IndexOf(i) != model.AIActiveIndex);
                 if (nextIndex == -1)
                 {
                     logBuilder.AppendLine("Player wins the battle!");
@@ -236,7 +246,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 else
                 {
                     model.AIActiveIndex = nextIndex;
-                    model.AICurrentHP = aiTeam[nextIndex].HP;
+                    model.AICurrentHP = aiTeam[nextIndex].CurrentHP;
                     model.AIMoves = await _pokeApiService.GetPokemonMovesAsync(aiTeam[nextIndex].Name);
                     model.AIStatus = "None";
                     model.AISleepCounter = 0;
@@ -328,6 +338,9 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             model.PlayerCurrentHP = Math.Max(0, model.PlayerCurrentHP - damage);
             logBuilder.AppendLine($"{p2.Name} used {selectedMove.Name} and dealt {damage} damage!");
 
+            // Update Player Pokémon current HP in team list
+            model.PlayerTeam[model.PlayerActiveIndex].CurrentHP = model.PlayerCurrentHP;
+
             // Fix for ref issue
             string playerStatus = model.PlayerStatus;
             int playerSleep = model.PlayerSleepCounter;
@@ -342,7 +355,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             {
                 logBuilder.AppendLine($"{p1.Name} fainted!");
 
-                int nextIndex = playerTeam.FindIndex(i => i.HP > 0 && playerTeam.IndexOf(i) != model.PlayerActiveIndex);
+                int nextIndex = playerTeam.FindIndex(i => i.CurrentHP > 0 && playerTeam.IndexOf(i) != model.PlayerActiveIndex);
                 if (nextIndex == -1)
                 {
                     logBuilder.AppendLine("AI wins the battle!");
@@ -351,7 +364,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 else
                 {
                     model.PlayerActiveIndex = nextIndex;
-                    model.PlayerCurrentHP = playerTeam[nextIndex].HP;
+                    model.PlayerCurrentHP = playerTeam[nextIndex].CurrentHP;
                     model.PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(playerTeam[nextIndex].Name);
                     model.PlayerStatus = "None";
                     model.PlayerSleepCounter = 0;
