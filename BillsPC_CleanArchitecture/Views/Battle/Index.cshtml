@@ -64,7 +64,47 @@
 
     @if (!Model.BattleOver)
     {
-        if (Model.IsPlayerTurn)
+        if (Model.RequireSwitch)
+        {
+            <h4 class="text-center mb-3">Your Pokémon fainted! Choose a Pokémon to switch in:</h4>
+
+            <form method="post" asp-action="UsePlayerMove" class="moves" id="switchForm">
+                <div class="switch-sprites align-content-center red-box">
+                    @for (int i = 0; i < Model.PlayerTeam.Count; i++)
+                    {
+                        var poke = Model.PlayerTeam[i];
+                        bool isActive = (i == Model.PlayerActiveIndex);
+                        bool isFainted = poke.CurrentHP <= 0;
+
+                        <button type="submit" name="switchTo" value="@i"
+                                class="sprite-button"
+                                @(isActive || isFainted ? "disabled" : null)
+                                title="@poke.Name @(isFainted ? "(Fainted)" : "")"
+                                style="cursor:@(isActive || isFainted ? "not-allowed" : "pointer")">
+                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/@(poke.PokemonID).png"
+                                 alt="@poke.Name"
+                                 class="switch-pokemon-sprite @(isFainted ? "fainted" : "") @(isActive ? "active" : "")" />
+                        </button>
+                    }
+                </div>
+
+                <!-- Hidden fields -->
+                <input type="hidden" name="activeSlot1" value="@Model.PlayerActiveIndex" />
+                <input type="hidden" name="activeSlot2" value="@Model.AIActiveIndex" />
+                <input type="hidden" name="pokemon1CurrentHP" value="@Model.PlayerCurrentHP" />
+                <input type="hidden" name="pokemon2CurrentHP" value="@Model.AICurrentHP" />
+                <input type="hidden" name="pokemon1Status" value="@Model.PlayerStatus" />
+                <input type="hidden" name="pokemon2Status" value="@Model.AIStatus" />
+                <input type="hidden" name="pokemon1SleepCounter" value="@Model.PlayerSleepCounter" />
+                <input type="hidden" name="pokemon2SleepCounter" value="@Model.AISleepCounter" />
+                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog)" />
+
+                <!-- Base64 Encoded JSON -->
+                <input type="hidden" name="playerTeamJson" value="@playerTeamJson" />
+                <input type="hidden" name="aiTeamJson" value="@aiTeamJson" />
+            </form>
+        }
+        else if (Model.IsPlayerTurn)
         {
             <h4 class="text-center mb-3">Choose @p1.Name's move or switch:</h4>
 
@@ -76,15 +116,24 @@
                     </button>
                 }
 
-                @for (int i = 0; i < Model.PlayerTeam.Count; i++)
-                {
-                    if (i != Model.PlayerActiveIndex && Model.PlayerTeam[i].HP > 0)
+                <div class="switch-sprites align-content-center red-box">
+                    @for (int i = 0; i < Model.PlayerTeam.Count; i++)
                     {
-                        <button type="submit" name="switchTo" value="@i" class="btn btn-secondary btn-sm">
-                            Switch to @Model.PlayerTeam[i].Name
+                        var poke = Model.PlayerTeam[i];
+                        bool isActive = (i == Model.PlayerActiveIndex);
+                        bool isFainted = poke.CurrentHP <= 0;
+
+                        <button type="submit" name="switchTo" value="@i"
+                                class="sprite-button"
+                                @(isActive || isFainted ? "disabled" : null)
+                                title="@poke.Name @(isFainted ? "(Fainted)" : "")"
+                                style="cursor:@(isActive || isFainted ? "not-allowed" : "pointer")">
+                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/@(poke.PokemonID).png"
+                                 alt="@poke.Name"
+                                 class="switch-pokemon-sprite @(isFainted ? "fainted" : "") @(isActive ? "active" : "")" />
                         </button>
                     }
-                }
+                </div>
 
                 <input type="hidden" name="moveName" id="moveNameInput" />
                 <input type="hidden" name="activeSlot1" value="@Model.PlayerActiveIndex" />

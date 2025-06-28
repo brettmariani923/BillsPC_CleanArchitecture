@@ -126,3 +126,41 @@
     .move-button:hover {
         background: #ddd;
     }
+
+.switch-sprites {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.sprite-button {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+    .sprite-button:disabled {
+        opacity: 0.4;
+    }
+
+.switch-pokemon-sprite {
+    width: 90px;
+    height: 90px;
+    image-rendering: initial;
+    transition: transform 0.2s ease;
+}
+
+.sprite-button:not(:disabled):hover .switch-pokemon-sprite {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 4px #ffd700);
+}
+
+.fainted {
+    filter: grayscale(100%) brightness(50%);
+}
+
+.active {
+    outline: 2px solid #007bff;
+    border-radius: 6px;
+}

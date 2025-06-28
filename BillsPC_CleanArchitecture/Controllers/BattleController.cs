@@ -67,7 +67,8 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 AIStatus = "None",
                 PlayerSleepCounter = 0,
                 AISleepCounter = 0,
-                BattleOver = false
+                BattleOver = false,
+                RequireSwitch = false
             };
 
             return View("Index", vm);
@@ -101,17 +102,17 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
         {
             return team.All(p => p.CurrentHP <= 0);
         }
-
         [HttpPost]
         public async Task<IActionResult> UsePlayerMove(
-            int activeSlot1, int activeSlot2,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string moveName,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog,
-            string playerTeamJson, string aiTeamJson,
-            int? switchTo)
+   int activeSlot1, int activeSlot2,
+   int pokemon1CurrentHP, int pokemon2CurrentHP,
+   string moveName,
+   string pokemon1Status, string pokemon2Status,
+   int pokemon1SleepCounter, int pokemon2SleepCounter,
+   string battleLog,
+   string playerTeamJson, string aiTeamJson,
+   int? switchTo,
+   bool requireSwitch)   // persist requireSwitch flag
         {
             var playerJson = Encoding.UTF8.GetString(Convert.FromBase64String(playerTeamJson));
             var aiJson = Encoding.UTF8.GetString(Convert.FromBase64String(aiTeamJson));
@@ -121,7 +122,34 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
 
             var logBuilder = new StringBuilder(battleLog);
 
-            // Switching Pokémon logic
+            // Block move if requireSwitch true and no switch chosen
+            if (requireSwitch && !switchTo.HasValue)
+            {
+                ModelState.AddModelError("", "You must switch to a new Pokémon before continuing.");
+                var vm = new BattleViewModel
+                {
+                    PlayerTeam = playerTeam,
+                    AITeam = aiTeam,
+                    PlayerActiveIndex = activeSlot1,
+                    AIActiveIndex = activeSlot2,
+                    PlayerCurrentHP = pokemon1CurrentHP,
+                    AICurrentHP = pokemon2CurrentHP,
+                    PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(playerTeam[activeSlot1].Name),
+                    AIMoves = await _pokeApiService.GetPokemonMovesAsync(aiTeam[activeSlot2].Name),
+                    PlayerStatus = pokemon1Status,
+                    AIStatus = pokemon2Status,
+                    PlayerSleepCounter = pokemon1SleepCounter,
+                    AISleepCounter = pokemon2SleepCounter,
+                    BattleLog = logBuilder.ToString(),
+                    IsPlayerTurn = false,
+                    BattleOver = false,
+                    RequireSwitch = true
+                };
+
+                return View("Index", vm);
+            }
+
+            // Handle switch if requested
             if (switchTo.HasValue)
             {
                 int newActiveIndex = switchTo.Value;
@@ -151,8 +179,9 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                         PlayerSleepCounter = 0,
                         AISleepCounter = pokemon2SleepCounter,
                         BattleLog = logBuilder.ToString(),
-                        IsPlayerTurn = false,
-                        BattleOver = false
+                        IsPlayerTurn = false,  // AI's turn next
+                        BattleOver = false,
+                        RequireSwitch = false  // Switching done
                     };
 
                     return View("Index", modelSwitch);
@@ -160,7 +189,6 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 else
                 {
                     ModelState.AddModelError("", "Invalid switch request or Pokémon has fainted.");
-                    // Fallthrough or reload state as appropriate
                 }
             }
 
@@ -186,97 +214,137 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 AISleepCounter = pokemon2SleepCounter,
                 BattleLog = logBuilder.ToString(),
                 IsPlayerTurn = true,
-                BattleOver = false
+                BattleOver = false,
+                RequireSwitch = false
             };
 
-            // Sleep logic
-            if (model.PlayerStatus == "Sleep" && model.PlayerSleepCounter > 0)
-            {
-                logBuilder.AppendLine($"{p1.Name} is fast asleep and can't move!");
-                model.PlayerSleepCounter--;
-                model.IsPlayerTurn = false;
-                model.BattleLog = logBuilder.ToString();
-                return View("Index", model);
-            }
-            else if (model.PlayerStatus == "Sleep")
-            {
-                model.PlayerStatus = "None";
-                model.PlayerSleepCounter = 0;
-                logBuilder.AppendLine($"{p1.Name} woke up!");
-            }
-
-            // Paralysis check
-            if (model.PlayerStatus == "Paralyzed" && Random.Shared.Next(0, 100) < 25)
-            {
-                logBuilder.AppendLine($"{p1.Name} is paralyzed and can't move!");
-                model.IsPlayerTurn = false;
-                model.BattleLog = logBuilder.ToString();
-                return View("Index", model);
-            }
-
-            // Damage logic
+            // Calculate damage for player's move
             var selectedMove = p1Moves.FirstOrDefault(m => string.Equals(m.Name, moveName, StringComparison.OrdinalIgnoreCase))
                                ?? new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal", IsSpecial = false };
 
             int damage = CalculateDamage(p1, p2, selectedMove.Power, selectedMove.Type, selectedMove.IsSpecial);
             model.AICurrentHP = Math.Max(0, model.AICurrentHP - damage);
             logBuilder.AppendLine($"{p1.Name} used {selectedMove.Name} and dealt {damage} damage!");
-
-            // Update AI Pokémon current HP
             model.AITeam[model.AIActiveIndex].CurrentHP = model.AICurrentHP;
 
-            // Apply status effects
+            // Apply status effects to AI
             string aiStatus = model.AIStatus;
-            int aiSleep = model.AISleepCounter;
-
-            ApplyStatusEffects(selectedMove.Name, p2.Name, ref aiStatus, ref aiSleep, logBuilder);
-
+            int aiSleepCounter = model.AISleepCounter;
+            ApplyStatusEffects(selectedMove.Name, p2.Name, ref aiStatus, ref aiSleepCounter, logBuilder);
             model.AIStatus = aiStatus;
-            model.AISleepCounter = aiSleep;
+            model.AISleepCounter = aiSleepCounter;
 
-            // Faint check for AI
+            // Check if AI Pokémon fainted
             if (model.AICurrentHP <= 0)
             {
                 logBuilder.AppendLine($"{p2.Name} fainted!");
                 model.AITeam[model.AIActiveIndex].CurrentHP = 0;
 
-                if (IsTeamDefeated(aiTeam))
+                if (IsTeamDefeated(model.AITeam))
                 {
                     logBuilder.AppendLine("Player wins the battle!");
                     model.BattleOver = true;
+                    model.IsPlayerTurn = false;
+                    model.RequireSwitch = false;
                 }
                 else
                 {
-                    int nextIndex = aiTeam.FindIndex(i => i.CurrentHP > 0 && aiTeam.IndexOf(i) != model.AIActiveIndex);
-                    model.AIActiveIndex = nextIndex;
-                    model.AICurrentHP = aiTeam[nextIndex].CurrentHP;
-                    model.AIMoves = await _pokeApiService.GetPokemonMovesAsync(aiTeam[nextIndex].Name);
-                    model.AIStatus = "None";
-                    model.AISleepCounter = 0;
-                    logBuilder.AppendLine($"{aiTeam[nextIndex].Name} was sent out!");
+                    // Auto-switch AI's next available Pokémon
+                    int nextAIIndex = model.AITeam.FindIndex(i => i.CurrentHP > 0 && model.AITeam.IndexOf(i) != model.AIActiveIndex);
+                    if (nextAIIndex == -1)
+                    {
+                        logBuilder.AppendLine("Player wins the battle!");
+                        model.BattleOver = true;
+                        model.IsPlayerTurn = false;
+                    }
+                    else
+                    {
+                        model.AIActiveIndex = nextAIIndex;
+                        model.AICurrentHP = model.AITeam[nextAIIndex].CurrentHP;
+                        model.AIMoves = await _pokeApiService.GetPokemonMovesAsync(model.AITeam[nextAIIndex].Name);
+                        model.AIStatus = "None";
+                        model.AISleepCounter = 0;
+                        logBuilder.AppendLine($"{model.AITeam[nextAIIndex].Name} was sent out!");
+                    }
                 }
             }
 
+            // Player faint check (after AI move, safeguard)
+            if (model.PlayerCurrentHP <= 0)
+            {
+                logBuilder.AppendLine($"{p1.Name} fainted!");
+                model.PlayerTeam[model.PlayerActiveIndex].CurrentHP = 0;
+
+                if (IsTeamDefeated(model.PlayerTeam))
+                {
+                    logBuilder.AppendLine("AI wins the battle!");
+                    model.BattleOver = true;
+                    model.IsPlayerTurn = false;
+                    model.RequireSwitch = false;
+                }
+                else
+                {
+                    model.RequireSwitch = true;
+                    logBuilder.AppendLine("Your Pokémon fainted! Please choose a new Pokémon to send out.");
+                    model.IsPlayerTurn = false;
+                }
+            }
+            else
+            {
+                model.RequireSwitch = false;
+            }
+
             model.BattleLog = logBuilder.ToString();
-            model.IsPlayerTurn = false;
+
+            // Next turn logic
+            if (!model.BattleOver && model.AICurrentHP > 0 && !model.RequireSwitch)
+                model.IsPlayerTurn = false;
+            else
+                model.IsPlayerTurn = model.RequireSwitch ? false : true;
 
             return View("Index", model);
         }
 
         [HttpPost]
         public async Task<IActionResult> UseAIMove(
-            int activeSlot1, int activeSlot2,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog,
-            string playerTeamJson, string aiTeamJson)
+          int activeSlot1, int activeSlot2,
+          int pokemon1CurrentHP, int pokemon2CurrentHP,
+          string pokemon1Status, string pokemon2Status,
+          int pokemon1SleepCounter, int pokemon2SleepCounter,
+          string battleLog,
+          string playerTeamJson, string aiTeamJson,
+          bool requireSwitch)
         {
             var playerJson = Encoding.UTF8.GetString(Convert.FromBase64String(playerTeamJson));
             var aiJson = Encoding.UTF8.GetString(Convert.FromBase64String(aiTeamJson));
 
             var playerTeam = JsonSerializer.Deserialize<List<CurrentTeam_DTO>>(playerJson);
             var aiTeam = JsonSerializer.Deserialize<List<CurrentTeam_DTO>>(aiJson);
+
+            if (requireSwitch)
+            {
+                var vmWaitSwitch = new BattleViewModel
+                {
+                    PlayerTeam = playerTeam,
+                    AITeam = aiTeam,
+                    PlayerActiveIndex = activeSlot1,
+                    AIActiveIndex = activeSlot2,
+                    PlayerCurrentHP = pokemon1CurrentHP,
+                    AICurrentHP = pokemon2CurrentHP,
+                    PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(playerTeam[activeSlot1].Name),
+                    AIMoves = await _pokeApiService.GetPokemonMovesAsync(aiTeam[activeSlot2].Name),
+                    PlayerStatus = pokemon1Status,
+                    AIStatus = pokemon2Status,
+                    PlayerSleepCounter = pokemon1SleepCounter,
+                    AISleepCounter = pokemon2SleepCounter,
+                    BattleLog = battleLog,
+                    IsPlayerTurn = false,
+                    BattleOver = false,
+                    RequireSwitch = true
+                };
+
+                return View("Index", vmWaitSwitch);
+            }
 
             var p1 = playerTeam[activeSlot1];
             var p2 = aiTeam[activeSlot2];
@@ -300,12 +368,13 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 AISleepCounter = pokemon2SleepCounter,
                 BattleLog = battleLog,
                 IsPlayerTurn = false,
-                BattleOver = false
+                BattleOver = false,
+                RequireSwitch = false
             };
 
             var logBuilder = new StringBuilder(model.BattleLog);
 
-            // Sleep logic for AI
+            // AI Sleep check
             if (model.AIStatus == "Sleep" && model.AISleepCounter > 0)
             {
                 logBuilder.AppendLine($"{p2.Name} is fast asleep and can't move!");
@@ -321,7 +390,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 logBuilder.AppendLine($"{p2.Name} woke up!");
             }
 
-            // Paralysis check for AI
+            // AI Paralysis check
             if (model.AIStatus == "Paralyzed" && Random.Shared.Next(0, 100) < 25)
             {
                 logBuilder.AppendLine($"{p2.Name} is paralyzed and can't move!");
@@ -330,6 +399,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 return View("Index", model);
             }
 
+            // AI selects random move
             var random = new Random();
             var selectedMove = p2Moves.Count > 0
                 ? p2Moves[random.Next(p2Moves.Count)]
@@ -338,18 +408,16 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             int damage = CalculateDamage(p2, p1, selectedMove.Power, selectedMove.Type, selectedMove.IsSpecial);
             model.PlayerCurrentHP = Math.Max(0, model.PlayerCurrentHP - damage);
             logBuilder.AppendLine($"{p2.Name} used {selectedMove.Name} and dealt {damage} damage!");
-
-            // Update Player Pokémon current HP
             model.PlayerTeam[model.PlayerActiveIndex].CurrentHP = model.PlayerCurrentHP;
 
+            // Apply status effects to player
             string playerStatus = model.PlayerStatus;
             int playerSleep = model.PlayerSleepCounter;
-
             ApplyStatusEffects(selectedMove.Name, p1.Name, ref playerStatus, ref playerSleep, logBuilder);
-
             model.PlayerStatus = playerStatus;
             model.PlayerSleepCounter = playerSleep;
 
+            // Player faint check
             if (model.PlayerCurrentHP <= 0)
             {
                 logBuilder.AppendLine($"{p1.Name} fainted!");
@@ -359,21 +427,27 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 {
                     logBuilder.AppendLine("AI wins the battle!");
                     model.BattleOver = true;
+                    model.IsPlayerTurn = false;
+                    model.RequireSwitch = false;
                 }
                 else
                 {
-                    int nextIndex = playerTeam.FindIndex(i => i.CurrentHP > 0 && playerTeam.IndexOf(i) != model.PlayerActiveIndex);
-                    model.PlayerActiveIndex = nextIndex;
-                    model.PlayerCurrentHP = playerTeam[nextIndex].CurrentHP;
-                    model.PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(playerTeam[nextIndex].Name);
-                    model.PlayerStatus = "None";
-                    model.PlayerSleepCounter = 0;
-                    logBuilder.AppendLine($"{playerTeam[nextIndex].Name} was sent out!");
+                    model.RequireSwitch = true;
+                    logBuilder.AppendLine("Your Pokémon fainted! Please choose a new Pokémon to send out.");
+                    model.IsPlayerTurn = false;
                 }
+            }
+            else
+            {
+                model.RequireSwitch = false;
             }
 
             model.BattleLog = logBuilder.ToString();
-            model.IsPlayerTurn = true;
+
+            if (!model.BattleOver && !model.RequireSwitch)
+                model.IsPlayerTurn = true;
+            else
+                model.IsPlayerTurn = false;
 
             return View("Index", model);
         }
@@ -404,8 +478,8 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             const int level = 50;
             double attackStat = isSpecial ? attacker.SpecialAttack : attacker.Attack;
             double defenseStat = isSpecial ? defender.SpecialDefense : defender.Defense;
-            double stab = 1.0;
-            double typeEffectiveness = 1.0;
+            double stab = 1.0;  // Extend for type matching
+            double typeEffectiveness = 1.0;  // Extend for type effectiveness
             double modifier = stab * typeEffectiveness * (Random.Shared.NextDouble() * 0.15 + 0.85);
             double damage = (((2 * level / 5.0 + 2) * attackStat * movePower / defenseStat) / 50 + 2) * modifier;
             return (int)Math.Round(damage);

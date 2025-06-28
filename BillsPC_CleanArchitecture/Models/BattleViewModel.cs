@@ -50,5 +50,7 @@ namespace BillsPC_CleanArchitecture.Api.Models
         // ✅ Add missing aliases
         public CurrentTeam_DTO ActiveSlot1 => PlayerActive;
         public CurrentTeam_DTO ActiveSlot2 => AIActive;
+
+        public bool RequireSwitch { get; set; } = false;
     }
 }
