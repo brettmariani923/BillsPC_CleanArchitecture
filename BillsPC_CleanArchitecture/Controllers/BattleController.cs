@@ -140,17 +140,17 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
         }
         [HttpPost]
         public async Task<IActionResult> UsePlayerMove(
-     int activeSlot1, int activeSlot2,
-     int pokemon1CurrentHP, int pokemon2CurrentHP,
-     string moveName,
-     string pokemon1Status, string pokemon2Status,
-     int pokemon1SleepCounter, int pokemon2SleepCounter,
-     string battleLog,
-     string playerTeamJson, string aiTeamJson,
-     int? switchTo,
-     bool requireSwitch,
-     int previousPlayerHP,
-     int previousAIHP)
+         int activeSlot1, int activeSlot2,
+         int pokemon1CurrentHP, int pokemon2CurrentHP,
+         string moveName,
+         string pokemon1Status, string pokemon2Status,
+         int pokemon1SleepCounter, int pokemon2SleepCounter,
+         string battleLog,
+         string playerTeamJson, string aiTeamJson,
+         int? switchTo,
+         bool requireSwitch,
+         int previousPlayerHP,
+         int previousAIHP)
         {
             var playerJson = Encoding.UTF8.GetString(Convert.FromBase64String(playerTeamJson));
             var aiJson = Encoding.UTF8.GetString(Convert.FromBase64String(aiTeamJson));
@@ -285,6 +285,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             // AI faint check
             if (model.AICurrentHP <= 0)
             {
+                Thread.Sleep(2000); // Simulate a brief pause for effect
                 logBuilder.AppendLine($"{p2.Name} fainted!");
                 model.AITeam[model.AIActiveIndex].CurrentHP = 0;
 
