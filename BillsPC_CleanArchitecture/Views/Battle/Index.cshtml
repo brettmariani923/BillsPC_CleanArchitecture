@@ -30,7 +30,13 @@
                 }
             </div>
             <div class="hp-bar-bg">
-                <div class="hp-bar-fill" style="width:@(Model.PlayerCurrentHP * 100 / p1.HP)%"></div>
+                <div id="player-hp-bar"
+                     class="hp-bar-fill"
+                     data-max="@p1.HP"
+                     data-current="@Model.PlayerPreviousHP"
+                     data-new="@Model.PlayerCurrentHP"
+                     style="width:@(Model.PlayerPreviousHP * 100 / p1.HP)%">
+                </div>
             </div>
             <div>HP: @Model.PlayerCurrentHP / @p1.HP</div>
             <img id="pokemon1-sprite"
@@ -48,7 +54,13 @@
                 }
             </div>
             <div class="hp-bar-bg">
-                <div class="hp-bar-fill" style="width:@(Model.AICurrentHP * 100 / p2.HP)%"></div>
+                <div id="ai-hp-bar"
+                     class="hp-bar-fill"
+                     data-max="@p2.HP"
+                     data-current="@Model.AIPreviousHP"
+                     data-new="@Model.AICurrentHP"
+                     style="width:@(Model.AIPreviousHP * 100 / p2.HP)%">
+                </div>
             </div>
             <div>HP: @Model.AICurrentHP / @p2.HP</div>
             <img id="pokemon2-sprite"
@@ -62,14 +74,14 @@
         @Model.BattleLog?.TrimEnd().Split('\n').LastOrDefault()
     </div>
 
+
     @if (!Model.BattleOver)
     {
         if (Model.RequireSwitch)
         {
-            <h4 class="text-center mb-3">Your Pokémon fainted! Choose a Pokémon to switch in:</h4>
 
             <form method="post" asp-action="UsePlayerMove" class="moves" id="switchForm">
-                <div class="switch-sprites align-content-center red-box">
+                <div class="switch-sprites align-content-center red-box ">
                     @for (int i = 0; i < Model.PlayerTeam.Count; i++)
                     {
                         var poke = Model.PlayerTeam[i];
@@ -186,48 +198,82 @@
         </p>
     }
 
-    <script>
-        const battleOver = "@Model.BattleOver.ToString().ToLower()" === "true";
-        const isPlayerTurn = "@Model.IsPlayerTurn.ToString().ToLower()" === "true";
+<script>
+    const battleOver = "@Model.BattleOver.ToString().ToLower()" === "true";
+    const isPlayerTurn = "@Model.IsPlayerTurn.ToString().ToLower()" === "true";
 
-        function performAttack(attackerId, targetId) {
-            if (battleOver) return;
+    function updateHPBar(id) {
+    const bar = document.getElementById(id);
+    const max = parseInt(bar.dataset.max);
+    const current = parseInt(bar.dataset.current);
+    const next = parseInt(bar.dataset.new);
 
-            const attacker = document.getElementById(attackerId);
-            const target = document.getElementById(targetId);
+    // Start from previous (current), animate to new
+    const percent = Math.max(0, (next / max) * 100);
+    setTimeout(() => {
+        bar.style.width = percent + '%';
 
-            if (!attacker || !target) return;
+        // Update bar color
+        bar.classList.remove('low', 'medium', 'high');
+        if (percent <= 25) bar.classList.add('low');
+        else if (percent <= 60) bar.classList.add('medium');
+        else bar.classList.add('high');
+    }, 50); // short delay to allow rendering of initial state
+}
 
-            attacker.classList.add('attack-forward');
-            setTimeout(() => {
-                attacker.classList.remove('attack-forward');
-                attacker.classList.add('attack-back');
-                target.classList.add('shake', 'flash');
-                setTimeout(() => {
-                    target.classList.remove('shake', 'flash');
-                    attacker.classList.remove('attack-back');
-                }, 500);
-            }, 300);
-        }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            if (battleOver) return;
+    function performAttack(attackerId, targetId) {
+        if (battleOver) return;
 
-            if (isPlayerTurn) {
-                document.querySelectorAll('#moveForm button.move-button').forEach(button => {
-                    button.addEventListener('click', function () {
-                        document.getElementById('moveNameInput').value = this.getAttribute('data-move');
-                        performAttack('pokemon1-sprite', 'pokemon2-sprite');
-                        setTimeout(() => {
-                            document.getElementById('moveForm').submit();
-                        }, 800);
-                    });
-                });
-            } else {
-                setTimeout(() => {
-                    performAttack('pokemon2-sprite', 'pokemon1-sprite');
-                }, 100);
+        const attacker = document.getElementById(attackerId);
+        const target = document.getElementById(targetId);
+
+        if (!attacker || !target) return;
+
+        attacker.classList.add('attack-forward');
+        setTimeout(() => {
+            attacker.classList.remove('attack-forward');
+            attacker.classList.add('attack-back');
+            target.classList.add('shake', 'flash');
+
+            // Animate HP bar
+            if (targetId === 'pokemon2-sprite') {
+                updateHPBar('ai-hp-bar');
+            } else if (targetId === 'pokemon1-sprite') {
+                updateHPBar('player-hp-bar');
             }
-        });
-    </script>
+
+            setTimeout(() => {
+                target.classList.remove('shake', 'flash');
+                attacker.classList.remove('attack-back');
+            }, 500);
+        }, 300);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (battleOver) return;
+
+        // Initialize both HP bars on load
+        updateHPBar('player-hp-bar');
+        updateHPBar('ai-hp-bar');
+
+        if (isPlayerTurn) {
+            document.querySelectorAll('#moveForm button.move-button').forEach(button => {
+                button.addEventListener('click', function () {
+                    document.getElementById('moveNameInput').value = this.getAttribute('data-move');
+                    performAttack('pokemon1-sprite', 'pokemon2-sprite');
+
+                    setTimeout(() => {
+                        document.getElementById('moveForm').submit();
+                    }, 800);
+                });
+            });
+        } else {
+            setTimeout(() => {
+                performAttack('pokemon2-sprite', 'pokemon1-sprite');
+            }, 100);
+        }
+    });
+</script>
+
 </div>

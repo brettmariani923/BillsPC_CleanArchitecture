@@ -52,5 +52,9 @@ namespace BillsPC_CleanArchitecture.Api.Models
         public CurrentTeam_DTO ActiveSlot2 => AIActive;
 
         public bool RequireSwitch { get; set; } = false;
+        public int PlayerPreviousHP { get; set; }
+
+        public int AIPreviousHP { get; set; }
+
     }
 }

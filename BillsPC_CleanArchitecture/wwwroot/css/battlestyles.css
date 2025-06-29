@@ -43,7 +43,7 @@
 
 .pokemon-sprite {
     width: 150px;
-    image-rendering: pixelated;
+    image-rendering: initial;
     transition: transform 0.3s ease;
 }
 

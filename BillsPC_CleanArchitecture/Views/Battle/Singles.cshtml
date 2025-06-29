@@ -1,0 +1,170 @@
+﻿model BillsPC_CleanArchitecture.Api.Models.BattleViewModel
+@using System.Net
+
+@{
+    ViewData["Title"] = "Pokémon Battle Simulator - Interactive";
+    bool battleOver = Model.Pokemon1CurrentHP == 0 || Model.Pokemon2CurrentHP == 0;
+}
+
+<link rel="stylesheet" href="~/css/battlestyles.css" />
+
+<div class="battle-container">
+    <div class="pokemon-area">
+        <!-- Player Pokemon -->
+        <div class="pokemon-box">
+            <div class="pokemon-name">
+                @Model.Pokemon1.Name
+                @if (Model.Pokemon1Status != "None" && !string.IsNullOrEmpty(Model.Pokemon1Status))
+                {
+                    <span class="status-effect">(@Model.Pokemon1Status)</span>
+                }
+            </div>
+            <div class="hp-bar-bg">
+                <div class="hp-bar-fill" style="width:@(Model.Pokemon1CurrentHP * 100 / Model.Pokemon1.HP)%"></div>
+            </div>
+            <div>HP: @Model.Pokemon1CurrentHP / @Model.Pokemon1.HP</div>
+            <img id="pokemon1-sprite"
+                 src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/@(Model.Pokemon1.PokemonID).png"
+                 alt="@Model.Pokemon1.Name"
+                 class="pokemon-sprite" />
+        </div>
+
+        <!-- AI Pokemon -->
+        <div class="pokemon-box">
+            <div class="pokemon-name">
+                @Model.Pokemon2.Name
+                @if (Model.Pokemon2Status != "None" && !string.IsNullOrEmpty(Model.Pokemon2Status))
+                {
+                    <span class="status-effect">(@Model.Pokemon2Status)</span>
+                }
+            </div>
+            <div class="hp-bar-bg">
+                <div class="hp-bar-fill" style="width:@(Model.Pokemon2CurrentHP * 100 / Model.Pokemon2.HP)%"></div>
+            </div>
+            <div>HP: @Model.Pokemon2CurrentHP / @Model.Pokemon2.HP</div>
+            <img id="pokemon2-sprite"
+                 src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/@(Model.Pokemon2.PokemonID).png"
+                 alt="@Model.Pokemon2.Name"
+                 class="pokemon-sprite" />
+        </div>
+    </div>
+
+    <!-- Show only latest line -->
+    <div class="battle-text" id="battleText">
+        @Model.BattleLog?.TrimEnd().Split('\n').LastOrDefault()
+    </div>
+
+    @if (!battleOver)
+    {
+        if (Model.IsPlayerOneTurn)
+        {
+            <h4 style="text-align: center; margin-bottom: 1rem;">
+                Choose @Model.Pokemon1.Name's next move:
+            </h4>
+
+            <form method="post" asp-action="UsePlayerMove" class="moves" id="moveForm">
+                @foreach (var move in Model.Pokemon1Moves)
+                {
+                    <button type="button" class="move-button" data-move="@move.Name">
+                        @move.Name (@move.Power)
+                    </button>
+                }
+                <input type="hidden" name="moveName" id="moveNameInput" />
+                <input type="hidden" name="pokemon1Id" value="@Model.Pokemon1.PokemonID" />
+                <input type="hidden" name="pokemon2Id" value="@Model.Pokemon2.PokemonID" />
+                <input type="hidden" name="pokemon1CurrentHP" value="@Model.Pokemon1CurrentHP" />
+                <input type="hidden" name="pokemon2CurrentHP" value="@Model.Pokemon2CurrentHP" />
+                <input type="hidden" name="pokemon1Status" value="@Model.Pokemon1Status" />
+                <input type="hidden" name="pokemon2Status" value="@Model.Pokemon2Status" />
+                <input type="hidden" name="pokemon1SleepCounter" value="@Model.Pokemon1SleepCounter" />
+                <input type="hidden" name="pokemon2SleepCounter" value="@Model.Pokemon2SleepCounter" />
+                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog)" />
+            </form>
+        }
+        else
+        {
+            <p style="text-align: center; font-style: italic;">Opponent is choosing a move...</p>
+
+            <form method="post" asp-action="UseAIMove" id="aiMoveForm">
+                <input type="hidden" name="pokemon1Id" value="@Model.Pokemon1.PokemonID" />
+                <input type="hidden" name="pokemon2Id" value="@Model.Pokemon2.PokemonID" />
+                <input type="hidden" name="pokemon1CurrentHP" value="@Model.Pokemon1CurrentHP" />
+                <input type="hidden" name="pokemon2CurrentHP" value="@Model.Pokemon2CurrentHP" />
+                <input type="hidden" name="pokemon1Status" value="@Model.Pokemon1Status" />
+                <input type="hidden" name="pokemon2Status" value="@Model.Pokemon2Status" />
+                <input type="hidden" name="pokemon1SleepCounter" value="@Model.Pokemon1SleepCounter" />
+                <input type="hidden" name="pokemon2SleepCounter" value="@Model.Pokemon2SleepCounter" />
+                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog)" />
+            </form>
+
+            <script>
+                setTimeout(() => {
+                    if (!@battleOver.ToString().ToLower()) {
+                        document.getElementById('aiMoveForm')?.submit();
+                    }
+                }, 2500);
+            </script>
+        }
+    }
+    else
+    {
+        <h4 style="text-align: center; color: #c00;">Battle Over</h4>
+        <p style="text-align: center;">
+            <a href="/Battle/Index" class="btn btn-primary">Start New Battle</a>
+        </p>
+    }
+
+    <script>
+        const battleOver = "@Model.BattleOver.ToString().ToLower()" === "true";
+        const isPlayerTurn = "@Model.IsPlayerOneTurn.ToString().ToLower()" === "true";
+
+        function performAttack(attackerId, targetId) {
+            if (battleOver) return;
+
+            const attacker = document.getElementById(attackerId);
+            const target = document.getElementById(targetId);
+
+            if (!attacker || !target) return;
+
+            attacker.classList.add('attack-forward');
+
+            setTimeout(() => {
+                attacker.classList.remove('attack-forward');
+                attacker.classList.add('attack-back');
+
+                target.classList.add('shake', 'flash');
+
+                setTimeout(() => {
+                    target.classList.remove('shake', 'flash');
+                    attacker.classList.remove('attack-back');
+                }, 500);
+            }, 300);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (battleOver) return;
+
+            if (isPlayerTurn) {
+                document.querySelectorAll('#moveForm button.move-button').forEach(button => {
+                    button.addEventListener('click', function () {
+                        if (battleOver) return;
+
+                        document.getElementById('moveNameInput').value = this.getAttribute('data-move');
+                        performAttack('pokemon1-sprite', 'pokemon2-sprite');
+
+                        setTimeout(() => {
+                            document.getElementById('moveForm').submit();
+                        }, 800);
+                    });
+                });
+            } else {
+                setTimeout(() => {
+                    performAttack('pokemon2-sprite', 'pokemon1-sprite');
+                    setTimeout(() => {
+                        document.getElementById('aiMoveForm')?.submit();
+                    }, 800);
+                }, 100);
+            }
+        });
+    </script>
+</div>
