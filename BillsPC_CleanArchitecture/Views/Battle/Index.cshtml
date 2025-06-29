@@ -202,27 +202,42 @@
     const battleOver = "@Model.BattleOver.ToString().ToLower()" === "true";
     const isPlayerTurn = "@Model.IsPlayerTurn.ToString().ToLower()" === "true";
 
+    function playAttackSound(moveName) {
+        if (!moveName) return;
+
+        const encodedName = encodeURIComponent(moveName.trim());
+        const soundSrc = `/sounds/${encodedName}.mp3`;
+
+        const audio = new Audio(soundSrc);
+        audio.volume = 0.5;
+
+        audio.onerror = () => {
+            const fallback = new Audio("/sounds/default.mp3");
+            fallback.volume = 0.5;
+            fallback.play().catch(e => console.warn("Fallback audio failed:", e));
+        };
+
+        audio.play().catch(e => console.warn("Audio play failed:", e));
+    }
+
     function updateHPBar(id) {
-    const bar = document.getElementById(id);
-    const max = parseInt(bar.dataset.max);
-    const current = parseInt(bar.dataset.current);
-    const next = parseInt(bar.dataset.new);
+        const bar = document.getElementById(id);
+        const max = parseInt(bar.dataset.max);
+        const current = parseInt(bar.dataset.current);
+        const next = parseInt(bar.dataset.new);
 
-    // Start from previous (current), animate to new
-    const percent = Math.max(0, (next / max) * 100);
-    setTimeout(() => {
-        bar.style.width = percent + '%';
+        const percent = Math.max(0, (next / max) * 100);
+        setTimeout(() => {
+            bar.style.width = percent + '%';
 
-        // Update bar color
-        bar.classList.remove('low', 'medium', 'high');
-        if (percent <= 25) bar.classList.add('low');
-        else if (percent <= 60) bar.classList.add('medium');
-        else bar.classList.add('high');
-    }, 50); // short delay to allow rendering of initial state
-}
+            bar.classList.remove('low', 'medium', 'high');
+            if (percent <= 25) bar.classList.add('low');
+            else if (percent <= 60) bar.classList.add('medium');
+            else bar.classList.add('high');
+        }, 50);
+    }
 
-
-    function performAttack(attackerId, targetId) {
+    function performAttack(attackerId, targetId, moveName) {
         if (battleOver) return;
 
         const attacker = document.getElementById(attackerId);
@@ -230,13 +245,14 @@
 
         if (!attacker || !target) return;
 
+        playAttackSound(moveName);
+
         attacker.classList.add('attack-forward');
         setTimeout(() => {
             attacker.classList.remove('attack-forward');
             attacker.classList.add('attack-back');
             target.classList.add('shake', 'flash');
 
-            // Animate HP bar
             if (targetId === 'pokemon2-sprite') {
                 updateHPBar('ai-hp-bar');
             } else if (targetId === 'pokemon1-sprite') {
@@ -253,27 +269,77 @@
     window.addEventListener('DOMContentLoaded', () => {
         if (battleOver) return;
 
-        // Initialize both HP bars on load
         updateHPBar('player-hp-bar');
         updateHPBar('ai-hp-bar');
 
         if (isPlayerTurn) {
             document.querySelectorAll('#moveForm button.move-button').forEach(button => {
                 button.addEventListener('click', function () {
-                    document.getElementById('moveNameInput').value = this.getAttribute('data-move');
-                    performAttack('pokemon1-sprite', 'pokemon2-sprite');
+                    const move = this.getAttribute('data-move');
+                    document.getElementById('moveNameInput').value = move;
+
+                    performAttack('pokemon1-sprite', 'pokemon2-sprite', move);
 
                     setTimeout(() => {
                         document.getElementById('moveForm').submit();
-                    }, 5);
+                    }, 800);
                 });
             });
         } else {
             setTimeout(() => {
-                performAttack('pokemon2-sprite', 'pokemon1-sprite');
+                // Try to extract AI's move from the last battle log line
+                const log = document.getElementById('battleText')?.textContent || "";
+                const match = log.match(/used\s+(.*?)\s+and dealt/i);
+                const aiMoveName = match?.[1]?.trim() || "default";
+
+                performAttack('pokemon2-sprite', 'pokemon1-sprite', aiMoveName);
             }, 100);
         }
     });
+    window.addEventListener('DOMContentLoaded', () => {
+    const music = document.getElementById('battleMusic');
+    const muteButton = document.getElementById('muteButton');
+
+    if (music) {
+        // Restore mute state from localStorage
+        const muted = localStorage.getItem('battleMusicMuted');
+        music.muted = muted === 'true';
+
+        // Restore currentTime from localStorage (if available)
+        const time = localStorage.getItem('battleMusicTime');
+        if (time) {
+            music.currentTime = parseFloat(time);
+        }
+
+        music.play().catch(err => {
+            console.warn("Autoplay failed:", err);
+        });
+    }
+
+    if (muteButton && music) {
+        // Update button icon on page load
+        muteButton.textContent = music.muted ? "🔇" : "🔊";
+
+        muteButton.addEventListener('click', () => {
+            music.muted = !music.muted;
+            muteButton.textContent = music.muted ? "🔇" : "🔊";
+
+            // Save mute state on toggle
+            localStorage.setItem('battleMusicMuted', music.muted);
+        });
+    }
+});
+
+
+
 </script>
 
-</div>
+
+<audio id="battleMusic" autoplay loop>
+    <source src="/sounds/Battle!.mp3" type="audio/mpeg" />
+    Your browser does not support the audio element.
+</audio>
+
+<button id="muteButton" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;" class="btn btn-dark">
+    🔊
+</button>
