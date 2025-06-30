@@ -8,6 +8,7 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Pokémon area layout */
 .pokemon-area {
     display: flex;
     justify-content: space-between;
@@ -26,6 +27,7 @@
     margin-bottom: 0.5rem;
 }
 
+/* HP Bar */
 .hp-bar-bg {
     width: 100%;
     height: 20px;
@@ -41,18 +43,27 @@
     transition: width 1.7s ease;
 }
 
+/* Pokémon sprites */
 .pokemon-sprite {
     width: 150px;
     image-rendering: initial;
     transition: transform 0.3s ease;
 }
 
-    /* Attack animations */
-    .pokemon-sprite.attack-forward {
-        transform: translateX(30px);
+    .pokemon-sprite.attack-back.pokemon1-sprite {
+        transform: translateX(0);
     }
 
-    .pokemon-sprite.attack-back {
+    .pokemon-sprite.attack-back.pokemon2-sprite {
+        transform: translateX(0);
+    }
+
+
+    .pokemon-sprite.attack-forward.pokemon2-sprite {
+        transform: translateX(-30px); /* AI moves left */
+    }
+
+    .pokemon-sprite.attack-back.pokemon2-spirte {
         transform: translateX(0);
     }
 
@@ -75,21 +86,13 @@
     animation: shake 0.5s forwards;
 }
 
-/* Flash animation */
-@keyframes flash {
-    0%, 100% {
-        filter: brightness(100%);
-    }
 
-    50% {
-        filter: brightness(150%);
-    }
-}
 
 .pokemon-sprite.flash {
     animation: flash 0.3s forwards;
 }
 
+/* Battle log text */
 .battle-text {
     height: 60px;
     font-family: monospace;
@@ -103,7 +106,7 @@
     justify-content: center;
 }
 
-
+/* Moves layout */
 .moves {
     display: flex;
     justify-content: space-between;
@@ -127,6 +130,7 @@
         background: #ddd;
     }
 
+/* Switch sprites container */
 .switch-sprites {
     display: flex;
     gap: 8px;
@@ -156,6 +160,7 @@
     filter: drop-shadow(0 0 4px #ffd700);
 }
 
+/* Pokémon statuses */
 .fainted {
     filter: grayscale(100%) brightness(50%);
 }
@@ -165,6 +170,7 @@
     border-radius: 6px;
 }
 
+/* Red box for switches */
 .red-box {
     border: 3px solid red;
     padding: 20px;

@@ -18,6 +18,8 @@ builder.Services.AddScoped<IDbConnectionFactory>(sp =>
 builder.Services.AddScoped<IPokemonService, PokemonService>();
 builder.Services.AddHttpClient<IPokeApiService, PokeApiService>();
 builder.Services.AddScoped<IBattleService, BattleService>();
+builder.Services.AddScoped<IDataAccess, DataAccess>();
+builder.Services.AddScoped<ISinglesService, SinglesService>();
 
 var app = builder.Build();
 

@@ -33,5 +33,6 @@ namespace BillsPC_CleanArchitecture.Application.Interfaces
             bool requireSwitch,
             int previousPlayerHP,
             int previousAIHP);
+
     }
 }

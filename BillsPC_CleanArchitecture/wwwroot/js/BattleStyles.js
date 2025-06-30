@@ -64,7 +64,7 @@ function openMusicTab(songFile = "Battle!.mp3") {
             <script>
               const audio = document.getElementById('bgm');
               const playButton = document.getElementById('playButton');
-              audio.volume = 0.5;
+              audio.volume = 0.1;
 
               function tryPlay() {
                 audio.play().catch(err => {
@@ -85,9 +85,8 @@ function openMusicTab(songFile = "Battle!.mp3") {
         `);
     }
 }
-
-
 function performAttack(attackerId, targetId, moveName) {
+
     if (battleOver) return;
 
     const attacker = document.getElementById(attackerId);
@@ -97,17 +96,21 @@ function performAttack(attackerId, targetId, moveName) {
 
     playAttackSound(moveName);
 
+    attacker.classList.remove('attack-forward', 'attack-back');
+    target.classList.remove('shake', 'flash');
+
     attacker.classList.add('attack-forward');
+
     setTimeout(() => {
         attacker.classList.remove('attack-forward');
         attacker.classList.add('attack-back');
+    }, 300);
+
+    setTimeout(() => {
         target.classList.add('shake', 'flash');
 
-        if (targetId === 'pokemon2-sprite') {
-            updateHPBar('ai-hp-bar');
-        } else if (targetId === 'pokemon1-sprite') {
-            updateHPBar('player-hp-bar');
-        }
+        if (targetId === 'pokemon2-sprite') updateHPBar('ai-hp-bar');
+        else if (targetId === 'pokemon1-sprite') updateHPBar('player-hp-bar');
 
         setTimeout(() => {
             target.classList.remove('shake', 'flash');
@@ -115,6 +118,8 @@ function performAttack(attackerId, targetId, moveName) {
         }, 500);
     }, 300);
 }
+
+
 
 window.addEventListener('DOMContentLoaded', () => {
     if (battleOver) return;

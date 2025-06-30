@@ -13,11 +13,11 @@ public class BattleService : IBattleService
     private readonly IPokeApiService _pokeApiService;
     private readonly IDataAccess _data;
 
-    public BattleService(IPokemonService pokemonService, IPokeApiService pokeApiService, IDataAccess data)
+    public BattleService(IPokemonService pokemonService, IPokeApiService pokeApiService, IDataAccess dataAccess)
     {
         _pokemonService = pokemonService;
         _pokeApiService = pokeApiService;
-        _data = data;
+        _data = dataAccess;
     }
 
     public async Task<List<CurrentTeam_DTO>> GenerateAITeamAsync()
@@ -491,4 +491,37 @@ public class BattleService : IBattleService
     {
         return team.All(p => p.CurrentHP <= 0);
     }
+
+    public async Task<BattleViewModel> StartSingleBattleAsync(int playerId, int opponentId)
+    {
+        var player = await _data.FetchAsync(new ReturnPokemonByIdRequest(playerId));
+        var opponent = await _data.FetchAsync(new ReturnPokemonByIdRequest(opponentId));
+
+        if (player == null || opponent == null)
+        {
+            throw new InvalidOperationException("Could not retrieve one or both Pokémon from the database.");
+        }
+
+        var playerMoves = await _pokeApiService.GetPokemonMovesAsync(player.Name);
+        var opponentMoves = await _pokeApiService.GetPokemonMovesAsync(opponent.Name);
+
+        return new BattleViewModel
+        {
+            Pokemon1 = player,
+            Pokemon2 = opponent,
+            Pokemon1CurrentHP = player.HP,
+            Pokemon2CurrentHP = opponent.HP,
+            Pokemon1Moves = playerMoves,
+            Pokemon2Moves = opponentMoves,
+            IsPlayerOneTurn = true,
+            BattleOver = false,
+            Pokemon1Status = "None",
+            Pokemon2Status = "None",
+            Pokemon1SleepCounter = 0,
+            Pokemon2SleepCounter = 0,
+            BattleLog = $"The battle between {player.Name} and {opponent.Name} begins!\n"
+        };
+    }
+
+
 }

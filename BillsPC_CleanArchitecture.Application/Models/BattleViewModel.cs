@@ -57,6 +57,8 @@ namespace BillsPC_CleanArchitecture.Application.Models
         public int AIPreviousHP { get; set; }
         public string PlayerTeamJson { get; set; }
         public string AITeamJson { get; set; }
+        public bool IsTeamBattle { get; set; } // already exists
+
 
     }
 }

@@ -1,4 +1,4 @@
-﻿model BillsPC_CleanArchitecture.Api.Models.BattleViewModel
+﻿@model BillsPC_CleanArchitecture.Application.Models.BattleViewModel
 @using System.Net
 
 @{
@@ -62,7 +62,7 @@
                 Choose @Model.Pokemon1.Name's next move:
             </h4>
 
-            <form method="post" asp-action="UsePlayerMove" class="moves" id="moveForm">
+            <form method="post" asp-action="UsePlayerMoveSingle" asp-controller="Battle" class="moves" id="moveForm">
                 @foreach (var move in Model.Pokemon1Moves)
                 {
                     <button type="button" class="move-button" data-move="@move.Name">
@@ -85,7 +85,7 @@
         {
             <p style="text-align: center; font-style: italic;">Opponent is choosing a move...</p>
 
-            <form method="post" asp-action="UseAIMove" id="aiMoveForm">
+            <form method="post" asp-action="UseAIMoveSingle" asp-controller="Battle" id="aiMoveForm">
                 <input type="hidden" name="pokemon1Id" value="@Model.Pokemon1.PokemonID" />
                 <input type="hidden" name="pokemon2Id" value="@Model.Pokemon2.PokemonID" />
                 <input type="hidden" name="pokemon1CurrentHP" value="@Model.Pokemon1CurrentHP" />
