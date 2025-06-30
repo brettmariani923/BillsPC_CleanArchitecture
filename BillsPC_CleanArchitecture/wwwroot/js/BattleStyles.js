@@ -111,7 +111,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 document.getElementById('moveNameInput').value = move;
 
-                // --- IMMEDIATE HP BAR UPDATE ---
                 const aiHpBar = document.getElementById('ai-hp-bar');
                 if (aiHpBar) {
                     // Use current data-new as current HP for demo or subtract fixed damage (e.g., 10)
