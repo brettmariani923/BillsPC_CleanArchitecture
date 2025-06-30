@@ -1,0 +1,233 @@
+﻿@using System.Net
+@using System.Text.Json
+@using System.Text
+@using BillsPC_CleanArchitecture.Application.Models;
+@model BattleViewModel
+
+@functions {
+    public static string EncodeToBase64(string input) =>
+        Convert.ToBase64String(Encoding.UTF8.GetBytes(input));
+}
+
+@{
+    var p1 = Model.PlayerActive;
+    var p2 = Model.AIActive;
+
+    string playerTeamJson = EncodeToBase64(JsonSerializer.Serialize(Model.PlayerTeam));
+    string aiTeamJson = EncodeToBase64(JsonSerializer.Serialize(Model.AITeam));
+}
+
+<link rel="stylesheet" href="~/css/battlestyles.css" />
+
+<div class="battle-container">
+    <div class="pokemon-area">
+        <div class="pokemon-box">
+            <div class="pokemon-name">
+                @p1.Name
+                @if (Model.PlayerStatus != "None" && !string.IsNullOrEmpty(Model.PlayerStatus))
+                {
+                    <span class="status-effect">(@Model.PlayerStatus)</span>
+                }
+            </div>
+            <div class="hp-bar-bg">
+                <div id="player-hp-bar"
+                     class="hp-bar-fill"
+                     data-max="@p1.HP"
+                     data-current="@Model.PlayerPreviousHP"
+                     data-new="@Model.PlayerCurrentHP"
+                     style="width:@(Model.PlayerPreviousHP * 100 / p1.HP)%">
+                </div>
+            </div>
+            <div>HP: @Model.PlayerCurrentHP / @p1.HP</div>
+            <img id="pokemon1-sprite"
+                 src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/@(p1.PokemonID).png"
+                 alt="@p1.Name"
+                 class="pokemon-sprite" />
+        </div>
+
+        <div class="pokemon-box">
+            <div class="pokemon-name">
+                @p2.Name
+                @if (Model.AIStatus != "None" && !string.IsNullOrEmpty(Model.AIStatus))
+                {
+                    <span class="status-effect">(@Model.AIStatus)</span>
+                }
+            </div>
+            <div class="hp-bar-bg">
+                <div id="ai-hp-bar"
+                     class="hp-bar-fill"
+                     data-max="@p2.HP"
+                     data-current="@Model.AIPreviousHP"
+                     data-new="@Model.AICurrentHP"
+                     style="width:@(Model.AIPreviousHP * 100 / p2.HP)%">
+                </div>
+            </div>
+            <div>HP: @Model.AICurrentHP / @p2.HP</div>
+            <img id="pokemon2-sprite"
+                 src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/@(p2.PokemonID).png"
+                 alt="@p2.Name"
+                 class="pokemon-sprite" />
+        </div>
+    </div>
+
+    <div class="battle-text" id="battleText">
+        @Model.BattleLog?.TrimEnd().Split('\n').LastOrDefault()
+    </div>
+
+    @if (!Model.BattleOver)
+    {
+        if (Model.RequireSwitch)
+        {
+            <form method="post" asp-action="UsePlayerMove" class="moves" id="switchForm">
+                <div class="switch-sprites align-content-center red-box">
+                    @for (int i = 0; i < Model.PlayerTeam.Count; i++)
+                    {
+                        var poke = Model.PlayerTeam[i];
+                        bool isActive = (i == Model.PlayerActiveIndex);
+                        bool isFainted = poke.CurrentHP <= 0;
+
+                        <button type="submit" name="switchTo" value="@i"
+                                class="sprite-button"
+                                @(isActive || isFainted ? "disabled" : null)
+                                title="@poke.Name @(isFainted ? "(Fainted)" : "")"
+                                style="cursor:@(isActive || isFainted ? "not-allowed" : "pointer")">
+                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/@(poke.PokemonID).png"
+                                 alt="@poke.Name"
+                                 class="switch-pokemon-sprite @(isFainted ? "fainted" : "") @(isActive ? "active" : "")" />
+                        </button>
+                    }
+                </div>
+
+                <!-- Hidden fields -->
+                <input type="hidden" name="activeSlot1" value="@Model.PlayerActiveIndex" />
+                <input type="hidden" name="activeSlot2" value="@Model.AIActiveIndex" />
+                <input type="hidden" name="pokemon1CurrentHP" value="@Model.PlayerCurrentHP" />
+                <input type="hidden" name="pokemon2CurrentHP" value="@Model.AICurrentHP" />
+                <input type="hidden" name="pokemon1Status" value="@Model.PlayerStatus" />
+                <input type="hidden" name="pokemon2Status" value="@Model.AIStatus" />
+                <input type="hidden" name="pokemon1SleepCounter" value="@Model.PlayerSleepCounter" />
+                <input type="hidden" name="pokemon2SleepCounter" value="@Model.AISleepCounter" />
+                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog)" />
+
+                <!-- Base64 Encoded JSON -->
+                <input type="hidden" name="playerTeamJson" value="@playerTeamJson" />
+                <input type="hidden" name="aiTeamJson" value="@aiTeamJson" />
+            </form>
+
+            <script>
+                const aiHpBar = document.getElementById('ai-hp-bar');
+                const currentHP = parseInt(aiHpBar.dataset.new);
+
+                if (currentHP === 0) {
+                    // Delay auto-submit to allow HP bar animation to 0
+                    setTimeout(() => {
+                        document.getElementById('switchForm')?.submit();
+                    }, 1500);
+                }
+            </script>
+        }
+        else if (Model.IsPlayerTurn)
+        {
+            <h4 class="text-center mb-3">Choose @p1.Name's move or switch:</h4>
+
+            <form method="post" asp-action="UsePlayerMove" class="moves" id="moveForm">
+                @foreach (var move in Model.PlayerMoves)
+                {
+                    <button type="button" class="move-button" data-move="@move.Name">
+                        @move.Name (@move.Power)
+                    </button>
+                }
+
+                <div class="switch-sprites align-content-center red-box">
+                    @for (int i = 0; i < Model.PlayerTeam.Count; i++)
+                    {
+                        var poke = Model.PlayerTeam[i];
+                        bool isActive = (i == Model.PlayerActiveIndex);
+                        bool isFainted = poke.CurrentHP <= 0;
+
+                        <button type="submit" name="switchTo" value="@i"
+                                class="sprite-button"
+                                @(isActive || isFainted ? "disabled" : null)
+                                title="@poke.Name @(isFainted ? "(Fainted)" : "")"
+                                style="cursor:@(isActive || isFainted ? "not-allowed" : "pointer")">
+                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/@(poke.PokemonID).png"
+                                 alt="@poke.Name"
+                                 class="switch-pokemon-sprite @(isFainted ? "fainted" : "") @(isActive ? "active" : "")" />
+                        </button>
+                    }
+                </div>
+
+                <input type="hidden" name="moveName" id="moveNameInput" />
+                <input type="hidden" name="activeSlot1" value="@Model.PlayerActiveIndex" />
+                <input type="hidden" name="activeSlot2" value="@Model.AIActiveIndex" />
+                <input type="hidden" name="pokemon1CurrentHP" value="@Model.PlayerCurrentHP" />
+                <input type="hidden" name="pokemon2CurrentHP" value="@Model.AICurrentHP" />
+                <input type="hidden" name="pokemon1Status" value="@Model.PlayerStatus" />
+                <input type="hidden" name="pokemon2Status" value="@Model.AIStatus" />
+                <input type="hidden" name="pokemon1SleepCounter" value="@Model.PlayerSleepCounter" />
+                <input type="hidden" name="pokemon2SleepCounter" value="@Model.AISleepCounter" />
+                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog)" />
+
+                <!-- Base64 Encoded JSON -->
+                <input type="hidden" name="playerTeamJson" value="@playerTeamJson" />
+                <input type="hidden" name="aiTeamJson" value="@aiTeamJson" />
+            </form>
+        }
+        else
+        {
+            <p class="text-center fst-italic">Opponent is choosing a move...</p>
+
+            <form method="post" asp-action="UseAIMove" id="aiMoveForm">
+                <input type="hidden" name="activeSlot1" value="@Model.PlayerActiveIndex" />
+                <input type="hidden" name="activeSlot2" value="@Model.AIActiveIndex" />
+                <input type="hidden" name="pokemon1CurrentHP" value="@Model.PlayerCurrentHP" />
+                <input type="hidden" name="pokemon2CurrentHP" value="@Model.AICurrentHP" />
+                <input type="hidden" name="pokemon1Status" value="@Model.PlayerStatus" />
+                <input type="hidden" name="pokemon2Status" value="@Model.AIStatus" />
+                <input type="hidden" name="pokemon1SleepCounter" value="@Model.PlayerSleepCounter" />
+                <input type="hidden" name="pokemon2SleepCounter" value="@Model.AISleepCounter" />
+                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog)" />
+
+                <!-- Base64 Encoded JSON -->
+                <input type="hidden" name="playerTeamJson" value="@playerTeamJson" />
+                <input type="hidden" name="aiTeamJson" value="@aiTeamJson" />
+            </form>
+
+            <script>
+                setTimeout(() => {
+                    document.getElementById('aiMoveForm')?.submit();
+                }, 2500);
+            </script>
+        }
+    }
+    else
+    {
+        <h4 class="text-center text-danger">Battle Over</h4>
+        <p class="text-center">
+            <a href="/Battle/StartFromTeam" class="btn btn-primary">Start New Team Battle</a>
+        </p>
+    }
+</div>
+<script>
+  function bindMoveButtons() {
+    document.querySelectorAll('#moveForm button.move-button').forEach(button => {
+      button.onclick = () => {
+        const move = button.getAttribute('data-move');
+        if (!move) return;
+
+        document.getElementById('moveNameInput').value = move;
+
+        // Optional: play animation here if you want
+
+        setTimeout(() => {
+          document.getElementById('moveForm').submit();
+        }, 800);
+      };
+    });
+  }
+
+  // Call it on initial page load
+  document.addEventListener('DOMContentLoaded', () => {
+    bindMoveButtons();
+  });
+</script>

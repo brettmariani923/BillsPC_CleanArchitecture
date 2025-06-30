@@ -1,6 +1,7 @@
 using BillsPC_CleanArchitecture.Application.Services;
 using BillsPC_CleanArchitecture.Data.Interfaces;
 using BillsPC_CleanArchitecture.Data.Implementation;
+using BillsPC_CleanArchitecture.Application.Interfaces;
 using Microsoft.AspNetCore.Connections;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,7 @@ builder.Services.AddScoped<IDbConnectionFactory>(sp =>
 
 builder.Services.AddScoped<IPokemonService, PokemonService>();
 builder.Services.AddHttpClient<IPokeApiService, PokeApiService>();
+builder.Services.AddScoped<IBattleService, BattleService>();
 
 var app = builder.Build();
 
