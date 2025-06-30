@@ -208,6 +208,7 @@
         </p>
     }
 </div>
+<script src="~/js/battlestyles.js"></script>
 <script>
   function bindMoveButtons() {
     document.querySelectorAll('#moveForm button.move-button').forEach(button => {
@@ -229,5 +230,15 @@
   // Call it on initial page load
   document.addEventListener('DOMContentLoaded', () => {
     bindMoveButtons();
+
+    if (!@Model.BattleOver.ToString().ToLower()) {
+      openMusicTab();  // from battle.js file
+    } else {
+      closeMusicTab(); // from battle.js file
+    }
+
+    window.addEventListener('beforeunload', () => {
+      closeMusicTab();
+    });
   });
 </script>
