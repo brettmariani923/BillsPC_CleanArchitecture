@@ -38,7 +38,7 @@
 .hp-bar-fill {
     height: 100%;
     background: #76c043;
-    transition: width 1s ease;
+    transition: width 1.7s ease;
 }
 
 .pokemon-sprite {

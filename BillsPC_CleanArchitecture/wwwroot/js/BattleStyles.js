@@ -53,7 +53,7 @@ function openMusicTab(songFile = "Battle!.mp3") {
         musicWindow.document.write(`
             <html><head><title>Music Player</title></head><body style="margin:0">
             <audio autoplay loop controls style="width:100%;">
-                <source src="/sounds/${songFile}" type="audio/mpeg" />
+                <source src="/sounds/${encodeURIComponent(songFile)}" type="audio/mpeg" />
                 Your browser does not support the audio element.
             </audio>
             </body></html>
@@ -110,6 +110,18 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (!move) return;
 
                 document.getElementById('moveNameInput').value = move;
+
+                // --- IMMEDIATE HP BAR UPDATE ---
+                const aiHpBar = document.getElementById('ai-hp-bar');
+                if (aiHpBar) {
+                    // Use current data-new as current HP for demo or subtract fixed damage (e.g., 10)
+                    // Ideally you calculate exact damage client-side or estimate here:
+                    const currentHP = parseInt(aiHpBar.dataset.new);
+                    const newHP = Math.max(0, currentHP - 10);  // Adjust '10' as you want for animation effect
+                    aiHpBar.dataset.new = newHP;
+                    updateHPBar('ai-hp-bar');
+                }
+                // -----------------------------
 
                 performAttack('pokemon1-sprite', 'pokemon2-sprite', move);
 
