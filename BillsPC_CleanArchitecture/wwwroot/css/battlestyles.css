@@ -164,3 +164,13 @@
     outline: 2px solid #007bff;
     border-radius: 6px;
 }
+
+.red-box {
+    border: 3px solid red;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 600px;
+    margin: 40px auto;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
