@@ -13,7 +13,7 @@ function playAttackSound(moveName) {
     audio.volume = 0.5;
 
     audio.onerror = () => {
-        const fallback = new Audio("/sounds/default.mp3");
+        const fallback = new Audio("/sounds/tackle.mp3");
         fallback.volume = 0.5;
         fallback.play().catch(e => console.warn("Fallback audio failed:", e));
     };
@@ -44,6 +44,7 @@ function updateHPBar(id) {
 function openMusicTab(songFile = "Battle!.mp3") {
     if (musicWindow && !musicWindow.closed) {
         musicWindow.focus();
+        // Do NOT rewrite document or reset audio
         return;
     }
 
@@ -51,22 +52,40 @@ function openMusicTab(songFile = "Battle!.mp3") {
 
     if (musicWindow) {
         musicWindow.document.write(`
-            <html><head><title>Music Player</title></head><body style="margin:0">
-            <audio autoplay loop controls style="width:100%;">
-                <source src="/sounds/${encodeURIComponent(songFile)}" type="audio/mpeg" />
-                Your browser does not support the audio element.
+          <html>
+          <head><title>Music Player</title></head>
+          <body style="margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+            <audio id="bgm" loop controls style="width:100%;">
+              <source src="/sounds/${encodeURIComponent(songFile)}" type="audio/mpeg" />
+              Your browser does not support the audio element.
             </audio>
-            </body></html>
+            <button id="playButton" style="display:none; margin-top:10px;">Play Music</button>
+
+            <script>
+              const audio = document.getElementById('bgm');
+              const playButton = document.getElementById('playButton');
+              audio.volume = 0.5;
+
+              function tryPlay() {
+                audio.play().catch(err => {
+                  console.warn("Autoplay prevented:", err);
+                  playButton.style.display = "block";
+                });
+              }
+
+              playButton.onclick = () => {
+                audio.play();
+                playButton.style.display = "none";
+              };
+
+              tryPlay();
+            <\/script>
+          </body>
+          </html>
         `);
     }
 }
 
-function closeMusicTab() {
-    if (musicWindow && !musicWindow.closed) {
-        musicWindow.close();
-        musicWindow = null;
-    }
-}
 
 function performAttack(attackerId, targetId, moveName) {
     if (battleOver) return;
@@ -111,16 +130,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 document.getElementById('moveNameInput').value = move;
 
+                // Animate HP bar reduction for opponent
                 const aiHpBar = document.getElementById('ai-hp-bar');
                 if (aiHpBar) {
-                    // Use current data-new as current HP for demo or subtract fixed damage (e.g., 10)
-                    // Ideally you calculate exact damage client-side or estimate here:
                     const currentHP = parseInt(aiHpBar.dataset.new);
-                    const newHP = Math.max(0, currentHP - 10);  // Adjust '10' as you want for animation effect
+                    const newHP = Math.max(0, currentHP - 10);  // Adjust '10' to match expected damage animation
                     aiHpBar.dataset.new = newHP;
                     updateHPBar('ai-hp-bar');
                 }
-                // -----------------------------
 
                 performAttack('pokemon1-sprite', 'pokemon2-sprite', move);
 
@@ -138,18 +155,7 @@ window.addEventListener('DOMContentLoaded', () => {
             performAttack('pokemon2-sprite', 'pokemon1-sprite', aiMoveName);
         }, 100);
     }
-});
 
-// Optionally, control music tab based on battle status:
-window.addEventListener('DOMContentLoaded', () => {
-    if (!battleOver) {
-        openMusicTab();
-    } else {
-        closeMusicTab();
-    }
-});
+ 
 
-// Close music tab when user navigates away or reloads
-window.addEventListener('beforeunload', () => {
-    closeMusicTab();
 });
