@@ -72,7 +72,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 previousPlayerHP,
                 previousAIHP);
 
-            return PartialView("_BattleView", vm);
+            return View("_BattleView", vm);
         }
 
         [HttpPost]
@@ -98,7 +98,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 previousPlayerHP,
                 previousAIHP);
 
-            return PartialView("_BattleView", vm);
+            return View("_BattleView", vm);
         }
 
 
