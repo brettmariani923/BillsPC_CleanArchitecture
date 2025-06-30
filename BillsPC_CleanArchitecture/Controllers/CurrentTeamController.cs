@@ -35,8 +35,12 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             await _pokemonService.AddPokemonToTeamAsync(slot, pokemonId.Value);
             return RedirectToAction("Index");
         }
-
-
+        [HttpPost]
+        public async Task<IActionResult> Remove(int slot)
+        {
+            await _pokemonService.RemovePokemonFromTeamAsync(slot);
+            return RedirectToAction("Index");
+        }
 
         [HttpPost]
         public async Task<IActionResult> Update(int slot, string pokemonName)
@@ -55,10 +59,6 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             await _pokemonService.AddPokemonToTeamAsync(slot, pokemonId.Value);
             return RedirectToAction("Index");
         }
-
-
-
-
 
         [HttpGet]
         public async Task<IActionResult> GetTeam()

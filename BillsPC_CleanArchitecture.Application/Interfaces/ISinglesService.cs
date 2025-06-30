@@ -7,7 +7,7 @@ public interface ISinglesService
 {
     Task<BattleViewModel> StartBattleAsync(int playerId, int opponentId);
 
-    Task<BattleViewModel> UsePlayerMoveAsync(
+    Task<BattleViewModel> UsePlayerMoveSinglesAsync(
         int pokemon1Id, int pokemon2Id,
         int pokemon1CurrentHP, int pokemon2CurrentHP,
         string moveName,
@@ -15,7 +15,7 @@ public interface ISinglesService
         int pokemon1SleepCounter, int pokemon2SleepCounter,
         string battleLog);
 
-    Task<BattleViewModel> UseAIMoveAsync(
+    Task<BattleViewModel> UseAIMoveSinglesAsync(
         int pokemon1Id, int pokemon2Id,
         int pokemon1CurrentHP, int pokemon2CurrentHP,
         string pokemon1Status, string pokemon2Status,

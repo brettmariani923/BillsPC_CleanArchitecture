@@ -128,7 +128,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             int pokemon1SleepCounter, int pokemon2SleepCounter,
             string battleLog)
         {
-            var updatedModel = await _singlesService.UsePlayerMoveAsync(
+            var updatedModel = await _singlesService.UsePlayerMoveSinglesAsync(
                 pokemon1Id, pokemon2Id,
                 pokemon1CurrentHP, pokemon2CurrentHP,
                 moveName,
@@ -147,7 +147,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             int pokemon1SleepCounter, int pokemon2SleepCounter,
             string battleLog)
         {
-            var updatedModel = await _singlesService.UseAIMoveAsync(
+            var updatedModel = await _singlesService.UseAIMoveSinglesAsync(
                 pokemon1Id, pokemon2Id,
                 pokemon1CurrentHP, pokemon2CurrentHP,
                 pokemon1Status, pokemon2Status,

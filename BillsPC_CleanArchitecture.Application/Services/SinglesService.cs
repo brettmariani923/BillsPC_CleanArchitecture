@@ -44,7 +44,7 @@ using System.Text.Json;
             };
         }
 
-        public async Task<BattleViewModel> UsePlayerMoveAsync(
+        public async Task<BattleViewModel> UsePlayerMoveSinglesAsync(
             int pokemon1Id, int pokemon2Id,
             int pokemon1CurrentHP, int pokemon2CurrentHP,
             string moveName,
@@ -105,7 +105,7 @@ using System.Text.Json;
                 pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), !battleOver, battleOver);
         }
 
-        public async Task<BattleViewModel> UseAIMoveAsync(
+        public async Task<BattleViewModel> UseAIMoveSinglesAsync(
             int pokemon1Id, int pokemon2Id,
             int pokemon1CurrentHP, int pokemon2CurrentHP,
             string pokemon1Status, string pokemon2Status,
