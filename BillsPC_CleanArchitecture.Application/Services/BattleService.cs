@@ -5,6 +5,8 @@ using BillsPC_CleanArchitecture.Data.DTO;
 using BillsPC_CleanArchitecture.Data.Requests;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
+
 public class BattleService : IBattleService
 {
     private readonly IPokemonService _pokemonService;
@@ -49,7 +51,6 @@ public class BattleService : IBattleService
 
         if (playerTeam.Count == 0 || aiTeam.Count == 0)
         {
-            // Instead of ModelState/View, throw or return null for controller to handle
             throw new InvalidOperationException("Player or AI team is empty.");
         }
 
@@ -61,8 +62,14 @@ public class BattleService : IBattleService
         var playerActive = playerTeam[0];
         var aiActive = aiTeam[0];
 
-        var playerMoves = await _pokeApiService.GetPokemonMovesAsync(playerActive.Name);
-        var aiMoves = await _pokeApiService.GetPokemonMovesAsync(aiActive.Name);
+        // Parallelize these two calls:
+        var playerMovesTask = _pokeApiService.GetPokemonMovesAsync(playerActive.Name);
+        var aiMovesTask = _pokeApiService.GetPokemonMovesAsync(aiActive.Name);
+
+        await Task.WhenAll(playerMovesTask, aiMovesTask);
+
+        var playerMoves = playerMovesTask.Result;
+        var aiMoves = aiMovesTask.Result;
 
         var vm = new BattleViewModel
         {
@@ -110,7 +117,6 @@ public class BattleService : IBattleService
 
         if (requireSwitch && !switchTo.HasValue)
         {
-            // Instead of ModelState error & View, return model with error message property
             return new BattleViewModel
             {
                 PlayerTeam = playerTeam,
@@ -145,8 +151,12 @@ public class BattleService : IBattleService
 
                 logBuilder.AppendLine($"{oldActiveName} was switched out for {newActive.Name}!");
 
+                // Parallelize fetching moves for newActive and AI active pokemon
                 var pTwo = aiTeam[activeSlot2];
-                var pTwoMoves = await _pokeApiService.GetPokemonMovesAsync(pTwo.Name);
+                var pTwoMovesTask = _pokeApiService.GetPokemonMovesAsync(pTwo.Name);
+                var newActiveMovesTask = _pokeApiService.GetPokemonMovesAsync(newActive.Name);
+
+                await Task.WhenAll(pTwoMovesTask, newActiveMovesTask);
 
                 return new BattleViewModel
                 {
@@ -158,8 +168,8 @@ public class BattleService : IBattleService
                     AICurrentHP = pokemon2CurrentHP,
                     PlayerPreviousHP = newActive.CurrentHP,
                     AIPreviousHP = pokemon2CurrentHP,
-                    PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(newActive.Name),
-                    AIMoves = pTwoMoves,
+                    PlayerMoves = newActiveMovesTask.Result,
+                    AIMoves = pTwoMovesTask.Result,
                     PlayerStatus = "None",
                     AIStatus = pokemon2Status,
                     PlayerSleepCounter = 0,
@@ -172,6 +182,10 @@ public class BattleService : IBattleService
             }
             else
             {
+                var playerMovesTask = _pokeApiService.GetPokemonMovesAsync(playerTeam[activeSlot1].Name);
+                var aiMovesTask = _pokeApiService.GetPokemonMovesAsync(aiTeam[activeSlot2].Name);
+                await Task.WhenAll(playerMovesTask, aiMovesTask);
+
                 return new BattleViewModel
                 {
                     PlayerTeam = playerTeam,
@@ -182,8 +196,8 @@ public class BattleService : IBattleService
                     AICurrentHP = pokemon2CurrentHP,
                     PlayerPreviousHP = previousPlayerHP,
                     AIPreviousHP = previousAIHP,
-                    PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(playerTeam[activeSlot1].Name),
-                    AIMoves = await _pokeApiService.GetPokemonMovesAsync(aiTeam[activeSlot2].Name),
+                    PlayerMoves = playerMovesTask.Result,
+                    AIMoves = aiMovesTask.Result,
                     PlayerStatus = pokemon1Status,
                     AIStatus = pokemon2Status,
                     PlayerSleepCounter = pokemon1SleepCounter,
@@ -196,12 +210,17 @@ public class BattleService : IBattleService
             }
         }
 
-        // Normal move logic:
         var p1 = playerTeam[activeSlot1];
         var p2 = aiTeam[activeSlot2];
 
-        var p1Moves = await _pokeApiService.GetPokemonMovesAsync(p1.Name);
-        var p2Moves = await _pokeApiService.GetPokemonMovesAsync(p2.Name);
+        // Parallelize getting moves for both p1 and p2:
+        var p1MovesTask = _pokeApiService.GetPokemonMovesAsync(p1.Name);
+        var p2MovesTask = _pokeApiService.GetPokemonMovesAsync(p2.Name);
+
+        await Task.WhenAll(p1MovesTask, p2MovesTask);
+
+        var p1Moves = p1MovesTask.Result;
+        var p2Moves = p2MovesTask.Result;
 
         int p1PrevHP = pokemon1CurrentHP;
         int p2PrevHP = pokemon2CurrentHP;
@@ -209,7 +228,7 @@ public class BattleService : IBattleService
         var selectedMove = p1Moves.FirstOrDefault(m => string.Equals(m.Name, moveName, StringComparison.OrdinalIgnoreCase))
                            ?? new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal", IsSpecial = false };
 
-        int damage = CalculateDamageAsync(p1, p2, selectedMove.Power, selectedMove.Type, selectedMove.IsSpecial);
+        int damage = CalculateDamage(p1, p2, selectedMove.Power, selectedMove.Type, selectedMove.IsSpecial);
         int updatedAIHP = Math.Max(0, pokemon2CurrentHP - damage);
 
         logBuilder.AppendLine($"{p1.Name} used {selectedMove.Name} and dealt {damage} damage!");
@@ -245,11 +264,10 @@ public class BattleService : IBattleService
 
         if (model.AICurrentHP <= 0)
         {
-            Thread.Sleep(2000);
             logBuilder.AppendLine($"{p2.Name} fainted!");
             model.AITeam[model.AIActiveIndex].CurrentHP = 0;
 
-            if (IsTeamDefeatedAsync(model.AITeam))
+            if (IsTeamDefeated(model.AITeam))
             {
                 logBuilder.AppendLine("Player wins the battle!");
                 model.BattleOver = true;
@@ -302,6 +320,10 @@ public class BattleService : IBattleService
 
         if (requireSwitch)
         {
+            var playerMovesTask = _pokeApiService.GetPokemonMovesAsync(playerTeam[activeSlot1].Name);
+            var aiMovesTask = _pokeApiService.GetPokemonMovesAsync(aiTeam[activeSlot2].Name);
+            await Task.WhenAll(playerMovesTask, aiMovesTask);
+
             return new BattleViewModel
             {
                 PlayerTeam = playerTeam,
@@ -312,8 +334,8 @@ public class BattleService : IBattleService
                 AICurrentHP = pokemon2CurrentHP,
                 PlayerPreviousHP = previousPlayerHP,
                 AIPreviousHP = previousAIHP,
-                PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(playerTeam[activeSlot1].Name),
-                AIMoves = await _pokeApiService.GetPokemonMovesAsync(aiTeam[activeSlot2].Name),
+                PlayerMoves = playerMovesTask.Result,
+                AIMoves = aiMovesTask.Result,
                 PlayerStatus = pokemon1Status,
                 AIStatus = pokemon2Status,
                 PlayerSleepCounter = pokemon1SleepCounter,
@@ -328,8 +350,13 @@ public class BattleService : IBattleService
         var p1 = playerTeam[activeSlot1];
         var p2 = aiTeam[activeSlot2];
 
-        var p1Moves = await _pokeApiService.GetPokemonMovesAsync(p1.Name);
-        var p2Moves = await _pokeApiService.GetPokemonMovesAsync(p2.Name);
+        var p1MovesTask = _pokeApiService.GetPokemonMovesAsync(p1.Name);
+        var p2MovesTask = _pokeApiService.GetPokemonMovesAsync(p2.Name);
+
+        await Task.WhenAll(p1MovesTask, p2MovesTask);
+
+        var p1Moves = p1MovesTask.Result;
+        var p2Moves = p2MovesTask.Result;
 
         int p1PrevHP = pokemon1CurrentHP;
         int p2PrevHP = pokemon2CurrentHP;
@@ -386,7 +413,7 @@ public class BattleService : IBattleService
             ? p2Moves[random.Next(p2Moves.Count)]
             : new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal", IsSpecial = false };
 
-        int damage = CalculateDamageAsync(p2, p1, selectedMove.Power, selectedMove.Type, selectedMove.IsSpecial);
+        int damage = CalculateDamage(p2, p1, selectedMove.Power, selectedMove.Type, selectedMove.IsSpecial);
         model.PlayerCurrentHP = Math.Max(0, model.PlayerCurrentHP - damage);
         logBuilder.AppendLine($"{p2.Name} used {selectedMove.Name} and dealt {damage} damage!");
         model.PlayerTeam[model.PlayerActiveIndex].CurrentHP = model.PlayerCurrentHP;
@@ -402,7 +429,7 @@ public class BattleService : IBattleService
             logBuilder.AppendLine($"{p1.Name} fainted!");
             model.PlayerTeam[model.PlayerActiveIndex].CurrentHP = 0;
 
-            if (IsTeamDefeatedAsync(playerTeam))
+            if (IsTeamDefeated(playerTeam))
             {
                 logBuilder.AppendLine("AI wins the battle!");
                 model.BattleOver = true;
@@ -427,7 +454,7 @@ public class BattleService : IBattleService
         return model;
     }
 
-    public int CalculateDamageAsync(CurrentTeam_DTO attacker, CurrentTeam_DTO defender, int movePower, string moveType, bool isSpecial)
+    public int CalculateDamage(CurrentTeam_DTO attacker, CurrentTeam_DTO defender, int movePower, string moveType, bool isSpecial)
     {
         const int level = 50;
         double attackStat = isSpecial ? attacker.SpecialAttack : attacker.Attack;
@@ -460,9 +487,8 @@ public class BattleService : IBattleService
         }
     }
 
-    private bool IsTeamDefeatedAsync(List<CurrentTeam_DTO> team)
+    private bool IsTeamDefeated(List<CurrentTeam_DTO> team)
     {
         return team.All(p => p.CurrentHP <= 0);
     }
 }
-
