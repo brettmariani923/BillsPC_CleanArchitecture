@@ -4,7 +4,6 @@ using BillsPC_CleanArchitecture.Data.DTO;
 using BillsPC_CleanArchitecture.Data.Interfaces;
 using BillsPC_CleanArchitecture.Data.Requests;
 using System.Text;
-using System.Text.Json;
 
 public class SinglesService : ISinglesService
 {
@@ -19,11 +18,8 @@ public class SinglesService : ISinglesService
 
     public async Task<BattleViewModel> StartBattleAsync(int playerId, int opponentId)
     {
-        var player = await _data.FetchAsync(new ReturnPokemonByIdRequest(playerId));
-        var opponent = await _data.FetchAsync(new ReturnPokemonByIdRequest(opponentId));
-
-        var playerMoves = await _pokeApiService.GetPokemonMovesAsync(player.Name);
-        var opponentMoves = await _pokeApiService.GetPokemonMovesAsync(opponent.Name);
+        var (player, playerMoves) = await GetPokemonWithMovesAsync(playerId);
+        var (opponent, opponentMoves) = await GetPokemonWithMovesAsync(opponentId);
 
         return new BattleViewModel
         {
@@ -51,28 +47,15 @@ public class SinglesService : ISinglesService
         int pokemon1SleepCounter, int pokemon2SleepCounter,
         string battleLog)
     {
-        var p1 = await _data.FetchAsync(new ReturnPokemonByIdRequest(pokemon1Id));
-        var p2 = await _data.FetchAsync(new ReturnPokemonByIdRequest(pokemon2Id));
-        var p1Moves = await _pokeApiService.GetPokemonMovesAsync(p1.Name);
-        var p2Moves = await _pokeApiService.GetPokemonMovesAsync(p2.Name);
+        var (p1, p1Moves) = await GetPokemonWithMovesAsync(pokemon1Id);
+        var (p2, p2Moves) = await GetPokemonWithMovesAsync(pokemon2Id);
 
         var log = new StringBuilder(battleLog);
 
-        if (pokemon1Status == "Sleep")
+        if (HandleSleep(ref pokemon1Status, ref pokemon1SleepCounter, p1.Name, log))
         {
-            if (pokemon1SleepCounter > 0)
-            {
-                log.AppendLine($"{p1.Name} is fast asleep and can't move!");
-                pokemon1SleepCounter--;
-                return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-                    pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), false);
-            }
-            else
-            {
-                pokemon1Status = "None";
-                pokemon1SleepCounter = 0;
-                log.AppendLine($"{p1.Name} woke up!");
-            }
+            return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
+                pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), false);
         }
 
         if (pokemon1Status == "Paralyzed" && Random.Shared.Next(100) < 25)
@@ -96,9 +79,7 @@ public class SinglesService : ISinglesService
 
         bool battleOver = pokemon2CurrentHP <= 0;
         if (battleOver)
-        {
             log.AppendLine($"{p2.Name} fainted!");
-        }
 
         return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
             pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), false, battleOver);
@@ -111,10 +92,8 @@ public class SinglesService : ISinglesService
         int pokemon1SleepCounter, int pokemon2SleepCounter,
         string battleLog)
     {
-        var p1 = await _data.FetchAsync(new ReturnPokemonByIdRequest(pokemon1Id));
-        var p2 = await _data.FetchAsync(new ReturnPokemonByIdRequest(pokemon2Id));
-        var p1Moves = await _pokeApiService.GetPokemonMovesAsync(p1.Name);
-        var p2Moves = await _pokeApiService.GetPokemonMovesAsync(p2.Name);
+        var (p1, p1Moves) = await GetPokemonWithMovesAsync(pokemon1Id);
+        var (p2, p2Moves) = await GetPokemonWithMovesAsync(pokemon2Id);
 
         var log = new StringBuilder(battleLog);
 
@@ -125,21 +104,10 @@ public class SinglesService : ISinglesService
             log.AppendLine($"{p2.Name} is hurt by its burn!");
         }
 
-        if (pokemon2Status == "Sleep")
+        if (HandleSleep(ref pokemon2Status, ref pokemon2SleepCounter, p2.Name, log))
         {
-            if (pokemon2SleepCounter > 0)
-            {
-                log.AppendLine($"{p2.Name} is fast asleep and can't move!");
-                pokemon2SleepCounter--;
-                return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-                    pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), true);
-            }
-            else
-            {
-                pokemon2Status = "None";
-                pokemon2SleepCounter = 0;
-                log.AppendLine($"{p2.Name} woke up!");
-            }
+            return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
+                pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), true);
         }
 
         if (pokemon2Status == "Paralyzed" && Random.Shared.Next(100) < 25)
@@ -149,8 +117,9 @@ public class SinglesService : ISinglesService
                 pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), true);
         }
 
-        var move = p2Moves.OrderBy(_ => Guid.NewGuid()).FirstOrDefault()
-                   ?? new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal", IsSpecial = false };
+        var move = p2Moves.Count > 0
+            ? p2Moves[Random.Shared.Next(p2Moves.Count)]
+            : new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal", IsSpecial = false };
 
         int damage = CalculateDamage(p2, p1, move.Power, move.Type, move.IsSpecial);
         pokemon1CurrentHP = Math.Max(0, pokemon1CurrentHP - damage);
@@ -160,12 +129,17 @@ public class SinglesService : ISinglesService
 
         bool battleOver = pokemon1CurrentHP <= 0;
         if (battleOver)
-        {
             log.AppendLine($"{p1.Name} fainted!");
-        }
 
         return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
             pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), true, battleOver);
+    }
+
+    private async Task<(Pokemon_DTO, List<MoveInfo_DTO>)> GetPokemonWithMovesAsync(int id)
+    {
+        var pokemon = await _data.FetchAsync(new ReturnPokemonByIdRequest(id));
+        var moves = await _pokeApiService.GetPokemonMovesAsync(pokemon.Name);
+        return (pokemon, moves);
     }
 
     private BattleViewModel CreateModel(
@@ -194,6 +168,26 @@ public class SinglesService : ISinglesService
         };
     }
 
+    private bool HandleSleep(ref string status, ref int counter, string name, StringBuilder log)
+    {
+        if (status == "Sleep")
+        {
+            if (counter > 0)
+            {
+                log.AppendLine($"{name} is fast asleep and can't move!");
+                counter--;
+                return true;
+            }
+            else
+            {
+                status = "None";
+                counter = 0;
+                log.AppendLine($"{name} woke up!");
+            }
+        }
+        return false;
+    }
+
     private int CalculateDamage(Pokemon_DTO attacker, Pokemon_DTO defender, int power, string type, bool isSpecial)
     {
         const int level = 50;
@@ -208,19 +202,20 @@ public class SinglesService : ISinglesService
     {
         if (string.IsNullOrWhiteSpace(moveName)) return;
 
-        string lower = moveName.ToLower();
-
-        if (lower == "ember" && status == "None" && Random.Shared.NextDouble() < 0.2)
+        if (string.Equals(moveName, "Ember", StringComparison.OrdinalIgnoreCase) && status == "None" && Random.Shared.NextDouble() < 0.2)
         {
             status = "Burned";
             logBuilder.AppendLine($"{targetName} was burned!");
         }
-        else if ((lower == "thunder shock" || lower == "thunder wave") && status == "None" && Random.Shared.NextDouble() < 0.2)
+        else if ((string.Equals(moveName, "Thunder Shock", StringComparison.OrdinalIgnoreCase) ||
+                  string.Equals(moveName, "Thunder Wave", StringComparison.OrdinalIgnoreCase)) &&
+                 status == "None" && Random.Shared.NextDouble() < 0.2)
         {
             status = "Paralyzed";
             logBuilder.AppendLine($"{targetName} was paralyzed!");
         }
-        else if (lower == "hypnosis" && status == "None" && Random.Shared.NextDouble() < 0.6)
+        else if (string.Equals(moveName, "Hypnosis", StringComparison.OrdinalIgnoreCase) &&
+                 status == "None" && Random.Shared.NextDouble() < 0.6)
         {
             status = "Sleep";
             sleepCounter = Random.Shared.Next(2, 6);

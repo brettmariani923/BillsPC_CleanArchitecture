@@ -474,15 +474,15 @@ public class BattleService : IBattleService
             status = "Burned";
             logBuilder.AppendLine($"{targetName} was burned!");
         }
-        else if ((lower == "thunder shock" || lower == "thunder wave") && status == "None" && Random.Shared.NextDouble() < 0.2)
+        else if ((lower == "thunder shock" || lower == "thunder wave") && status == "None" && Random.Shared.NextDouble() < 0.8)
         {
             status = "Paralyzed";
             logBuilder.AppendLine($"{targetName} was paralyzed!");
         }
-        else if (lower == "hypnosis" && status == "None" && Random.Shared.NextDouble() < 0.6)
+        else if (lower == "hypnosis" && status == "None" && Random.Shared.NextDouble() < 0.8)
         {
             status = "Sleep";
-            sleepCounter = Random.Shared.Next(2, 6);
+            sleepCounter = Random.Shared.Next(2, 5);
             logBuilder.AppendLine($"{targetName} fell asleep!");
         }
     }

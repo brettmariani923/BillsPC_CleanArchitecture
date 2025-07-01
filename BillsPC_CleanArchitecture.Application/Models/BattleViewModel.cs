@@ -10,6 +10,7 @@ namespace BillsPC_CleanArchitecture.Application.Models
 
         public int Pokemon1CurrentHP { get; set; }
         public int Pokemon2CurrentHP { get; set; }
+  
 
         public List<MoveInfo_DTO> Pokemon1Moves { get; set; } = new();
         public List<MoveInfo_DTO> Pokemon2Moves { get; set; } = new();

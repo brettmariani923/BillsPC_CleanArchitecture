@@ -10,7 +10,7 @@
 
 <div class="battle-container">
     <div class="pokemon-area">
-        <!-- Player Pokemon -->
+        <!-- Player Pokémon -->
         <div class="pokemon-box">
             <div class="pokemon-name">
                 @Model.Pokemon1.Name
@@ -20,7 +20,11 @@
                 }
             </div>
             <div class="hp-bar-bg">
-                <div class="hp-bar-fill" style="width:@(Model.Pokemon1CurrentHP * 100 / Model.Pokemon1.HP)%"></div>
+                <div id="player-hp-bar"
+                     class="hp-bar-fill"
+                     data-max="@Model.Pokemon1.HP"
+                     data-current="@Model.Pokemon1CurrentHP">
+                </div>
             </div>
             <div>HP: @Model.Pokemon1CurrentHP / @Model.Pokemon1.HP</div>
             <img id="pokemon1-sprite"
@@ -29,7 +33,7 @@
                  class="pokemon-sprite" />
         </div>
 
-        <!-- AI Pokemon -->
+        <!-- AI Pokémon -->
         <div class="pokemon-box">
             <div class="pokemon-name">
                 @Model.Pokemon2.Name
@@ -39,7 +43,11 @@
                 }
             </div>
             <div class="hp-bar-bg">
-                <div class="hp-bar-fill" style="width:@(Model.Pokemon2CurrentHP * 100 / Model.Pokemon2.HP)%"></div>
+                <div id="ai-hp-bar"
+                     class="hp-bar-fill"
+                     data-max="@Model.Pokemon2.HP"
+                     data-current="@Model.Pokemon2CurrentHP">
+                </div>
             </div>
             <div>HP: @Model.Pokemon2CurrentHP / @Model.Pokemon2.HP</div>
             <img id="pokemon2-sprite"
@@ -49,7 +57,6 @@
         </div>
     </div>
 
-    <!-- Show only latest line -->
     <div class="battle-text" id="battleText">
         @Model.BattleLog?.TrimEnd().Split('\n').LastOrDefault()
     </div>
@@ -58,7 +65,7 @@
     {
         if (Model.IsPlayerOneTurn)
         {
-            <h4 style="text-align: center; margin-bottom: 1rem;">
+            <h4 class="text-center mb-3">
                 Choose @Model.Pokemon1.Name's next move:
             </h4>
 
@@ -83,7 +90,7 @@
         }
         else
         {
-            <p style="text-align: center; font-style: italic;">Opponent is choosing a move...</p>
+            <p class="text-center fst-italic">Opponent is choosing a move...</p>
 
             <form method="post" asp-action="UseAIMoveSingle" asp-controller="Battle" id="aiMoveForm">
                 <input type="hidden" name="pokemon1Id" value="@Model.Pokemon1.PokemonID" />
@@ -100,71 +107,100 @@
             <script>
                 setTimeout(() => {
                     if (!@battleOver.ToString().ToLower()) {
-                        document.getElementById('aiMoveForm')?.submit();
+                        performAttack('pokemon2-sprite', 'pokemon1-sprite');
+                        animateHPBar('player-hp-bar');
+                        setTimeout(() => {
+                            document.getElementById('aiMoveForm')?.submit();
+                        }, 800);
                     }
-                }, 2500);
+                }, 100);
             </script>
         }
     }
     else
     {
-        <h4 style="text-align: center; color: #c00;">Battle Over</h4>
-        <p style="text-align: center;">
+        <h4 class="text-center text-danger">Battle Over</h4>
+        <p class="text-center">
             <a href="/Battle/Index" class="btn btn-primary">Start New Battle</a>
         </p>
     }
 
-    <script>
-        const battleOver = "@Model.BattleOver.ToString().ToLower()" === "true";
-        const isPlayerTurn = "@Model.IsPlayerOneTurn.ToString().ToLower()" === "true";
+<script>
+    function animateHPBarOnce(barId, storageKey) {
+        const bar = document.getElementById(barId);
+        if (!bar) return;
 
-        function performAttack(attackerId, targetId) {
-            if (battleOver) return;
+        const maxHP = parseInt(bar.dataset.max);
+        const currentHP = parseInt(bar.dataset.current);
 
-            const attacker = document.getElementById(attackerId);
-            const target = document.getElementById(targetId);
+        const storedHP = parseInt(localStorage.getItem(storageKey));
 
-            if (!attacker || !target) return;
+        // Only animate if there's a change
+        if (!isNaN(storedHP) && storedHP !== currentHP) {
+            const fromPercent = (storedHP * 100) / maxHP;
+            const toPercent = (currentHP * 100) / maxHP;
 
-            attacker.classList.add('attack-forward');
+            bar.style.transition = "none";
+            bar.style.width = fromPercent + "%";
+            void bar.offsetWidth;
 
-            setTimeout(() => {
-                attacker.classList.remove('attack-forward');
-                attacker.classList.add('attack-back');
-
-                target.classList.add('shake', 'flash');
-
-                setTimeout(() => {
-                    target.classList.remove('shake', 'flash');
-                    attacker.classList.remove('attack-back');
-                }, 500);
-            }, 300);
+            bar.style.transition = "width 0.6s ease";
+            bar.style.width = toPercent + "%";
+        } else {
+            // No animation, just set the final width
+            const widthPercent = (currentHP * 100) / maxHP;
+            bar.style.transition = "none";
+            bar.style.width = widthPercent + "%";
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            if (battleOver) return;
+        // Store current value for next comparison
+        localStorage.setItem(storageKey, currentHP);
+    }
 
-            if (isPlayerTurn) {
-                document.querySelectorAll('#moveForm button.move-button').forEach(button => {
-                    button.addEventListener('click', function () {
-                        if (battleOver) return;
+    function clearHPMemoryIfBattleOver() {
+        const isOver = "@Model.BattleOver".toLowerCase() === "true";
+        if (isOver) {
+            localStorage.removeItem("player-hp");
+            localStorage.removeItem("ai-hp");
+        }
+    }
 
-                        document.getElementById('moveNameInput').value = this.getAttribute('data-move');
-                        performAttack('pokemon1-sprite', 'pokemon2-sprite');
+   window.addEventListener('DOMContentLoaded', () => {
+    clearHPMemoryIfBattleOver();
 
-                        setTimeout(() => {
-                            document.getElementById('moveForm').submit();
-                        }, 800);
-                    });
-                });
-            } else {
+    animateHPBarOnce('player-hp-bar', 'player-hp');
+    animateHPBarOnce('ai-hp-bar', 'ai-hp');
+
+    const isPlayerTurn = "@Model.IsPlayerOneTurn".toLowerCase() === "true";
+    const battleOver = "@Model.BattleOver".toLowerCase() === "true";
+
+    if (!battleOver && isPlayerTurn) {
+        document.querySelectorAll('#moveForm button.move-button').forEach(button => {
+            button.addEventListener('click', function () {
+                document.getElementById('moveNameInput').value = this.getAttribute('data-move');
+                performAttack('pokemon1-sprite', 'pokemon2-sprite');
+                animateHPBarOnce('ai-hp-bar', 'ai-hp');
+
                 setTimeout(() => {
-                    performAttack('pokemon2-sprite', 'pokemon1-sprite');
-                    setTimeout(() => {
-                        document.getElementById('aiMoveForm')?.submit();
-                    }, 800);
-                }, 100);
-            }
+                    document.getElementById('moveForm').submit();
+                }, 800);
+            });
         });
-    </script>
+    }
+
+    if (!battleOver && !isPlayerTurn) {
+        performAttack('pokemon2-sprite', 'pokemon1-sprite');
+        animateHPBarOnce('player-hp-bar', 'player-hp');
+
+        setTimeout(() => {
+            document.getElementById('aiMoveForm')?.submit();
+        }, 800);
+    }
+});
+
+</script>
+
+
+
+    <script src="/js/BattleStyles.js"></script>
 </div>
