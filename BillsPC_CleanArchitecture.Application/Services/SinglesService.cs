@@ -101,7 +101,7 @@ public class SinglesService : ISinglesService
         }
 
         return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-            pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), !battleOver, battleOver);
+            pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), false, battleOver);
     }
 
     public async Task<BattleViewModel> UseAIMoveSinglesAsync(
@@ -165,7 +165,7 @@ public class SinglesService : ISinglesService
         }
 
         return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-            pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), false, battleOver);
+            pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), true, battleOver);
     }
 
     private BattleViewModel CreateModel(
