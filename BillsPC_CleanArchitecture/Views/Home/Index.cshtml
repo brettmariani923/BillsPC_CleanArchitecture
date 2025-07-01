@@ -5,7 +5,7 @@
 }
 
 <div class="text-center mb-4">
-    <div style="border: 2px solid red; display: inline-block; padding: 10px; border-radius: 8px;">
+    <div style="border: 3px solid red; display: inline-block; padding: 10px; border-radius: 8px;">
         <h1 class="display-4"><strong>  Bill's PC  </strong></h1>
     </div>
     <h2 id="welcome"></h2>
@@ -18,9 +18,9 @@
     <div class="d-flex justify-content-center align-items-end mb-5" style="gap: 20px;">
         @foreach (var pokemon in Model)
         {
-            <div class="text-center">
+            <div class="text-center;">
                 <img src="@pokemon.SpriteUrl" alt="@pokemon.Name" width="96" height="96" />
-                <div class="small text-muted">@pokemon.Name</div>
+                <div class="small text-muted text-center">@pokemon.Name</div>
             </div>
         }
     </div>

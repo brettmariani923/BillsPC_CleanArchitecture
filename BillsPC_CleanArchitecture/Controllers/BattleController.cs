@@ -121,14 +121,14 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
 
         [HttpPost]
         public async Task<IActionResult> UsePlayerMoveSingle(
-            int pokemon1Id, int pokemon2Id,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string moveName,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog)
+        int pokemon1Id, int pokemon2Id,
+        int pokemon1CurrentHP, int pokemon2CurrentHP,
+        string moveName,
+        string pokemon1Status, string pokemon2Status,
+        int pokemon1SleepCounter, int pokemon2SleepCounter,
+        string battleLog)
         {
-            var updatedModel = await _singlesService.UsePlayerMoveSinglesAsync(
+            var model = await _singlesService.UsePlayerMoveSinglesAsync(
                 pokemon1Id, pokemon2Id,
                 pokemon1CurrentHP, pokemon2CurrentHP,
                 moveName,
@@ -136,27 +136,24 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
                 pokemon1SleepCounter, pokemon2SleepCounter,
                 battleLog);
 
-            return View("Singles", updatedModel);
+            // Only let AI attack if it’s still alive and battle isn't over
+            if (model.AICurrentHP > 0 && !model.BattleOver)
+            {
+                model = await _singlesService.UseAIMoveSinglesAsync(
+                    pokemon1Id, pokemon2Id,
+                    model.PlayerCurrentHP, model.AICurrentHP,
+                    model.PlayerStatus, model.AIStatus,
+                    model.PlayerSleepCounter, model.AISleepCounter,
+                    model.BattleLog);
+
+                // TEMP DEBUG
+            }
+
+            return View("Singles", model);
         }
-
-        [HttpPost]
-        public async Task<IActionResult> UseAIMoveSingle(
-            int pokemon1Id, int pokemon2Id,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog)
-        {
-            var updatedModel = await _singlesService.UseAIMoveSinglesAsync(
-                pokemon1Id, pokemon2Id,
-                pokemon1CurrentHP, pokemon2CurrentHP,
-                pokemon1Status, pokemon2Status,
-                pokemon1SleepCounter, pokemon2SleepCounter,
-                battleLog);
-
-            return View("Singles", updatedModel);
-        }
-
 
     }
+
+
 }
+
