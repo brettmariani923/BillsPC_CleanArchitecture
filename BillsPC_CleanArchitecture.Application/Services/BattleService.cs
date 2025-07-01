@@ -459,8 +459,8 @@ public class BattleService : IBattleService
         const int level = 50;
         double attackStat = isSpecial ? attacker.SpecialAttack : attacker.Attack;
         double defenseStat = isSpecial ? defender.SpecialDefense : defender.Defense;
-        double stab = 1.0;  // Extend for type matching
-        double typeEffectiveness = 1.0;  // Extend for type effectiveness
+        double stab = 1.5;  
+        double typeEffectiveness = 1.0;  
         double modifier = stab * typeEffectiveness * (Random.Shared.NextDouble() * 0.15 + 0.85);
         double damage = (((2 * level / 5.0 + 2) * attackStat * movePower / defenseStat) / 50 + 2) * modifier;
         return (int)Math.Round(damage);

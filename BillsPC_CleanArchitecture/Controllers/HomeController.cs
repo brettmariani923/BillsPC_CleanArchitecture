@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using BillsPC_CleanArchitecture.Data.Interfaces;
-using BillsPC_CleanArchitecture.Models; // Make sure you have this if ErrorViewModel is here
+using BillsPC_CleanArchitecture.Models; 
 using System.Diagnostics;
 
 public class HomeController : Controller

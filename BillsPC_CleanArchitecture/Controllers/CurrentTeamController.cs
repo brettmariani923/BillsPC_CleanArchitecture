@@ -27,7 +27,6 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
 
             if (pokemonId == null)
             {
-                // Handle no match found gracefully
                 ModelState.AddModelError("", "Pokemon not found");
                 return RedirectToAction("Index");
             }
@@ -51,7 +50,6 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
 
             if (pokemonId == null)
             {
-                // Handle no match found gracefully
                 ModelState.AddModelError("", "Pokemon not found");
                 return RedirectToAction("Index");
             }

@@ -135,7 +135,6 @@
 
         const storedHP = parseInt(localStorage.getItem(storageKey));
 
-        // Only animate if there's a change
         if (!isNaN(storedHP) && storedHP !== currentHP) {
             const fromPercent = (storedHP * 100) / maxHP;
             const toPercent = (currentHP * 100) / maxHP;

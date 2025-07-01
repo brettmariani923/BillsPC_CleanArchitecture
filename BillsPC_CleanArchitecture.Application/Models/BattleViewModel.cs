@@ -48,7 +48,6 @@ namespace BillsPC_CleanArchitecture.Application.Models
         public CurrentTeam_DTO PlayerActive => PlayerTeam?.Count > PlayerActiveIndex ? PlayerTeam[PlayerActiveIndex] : null;
         public CurrentTeam_DTO AIActive => AITeam?.Count > AIActiveIndex ? AITeam[AIActiveIndex] : null;
 
-        // ✅ Add missing aliases
         public CurrentTeam_DTO ActiveSlot1 => PlayerActive;
         public CurrentTeam_DTO ActiveSlot2 => AIActive;
 

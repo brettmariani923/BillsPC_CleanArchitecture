@@ -2,7 +2,7 @@
 {
     public class CurrentTeam_DTO
     {
-        public int Slot { get; set; }         // 1 to 6
+        public int Slot { get; set; }      
         public int PokemonID { get; set; }
         public string Name { get; set; }
         public int HP { get; set; }
@@ -16,6 +16,6 @@
         public string Region { get; set; }
         public string ImageUrl { get; set; }
         public string SpriteUrl { get; set; }
-        public int CurrentHP { get; set; }    // Add this to track HP during battle
+        public int CurrentHP { get; set; }    
     }
 }

@@ -162,7 +162,6 @@ namespace BillsPC_CleanArchitecture.Application.Services
             {
                 foreach (var moveEntry in movesArray.EnumerateArray())
                 {
-                    // Look inside version_group_details for learn method
                     var versionDetails = moveEntry.GetProperty("version_group_details");
 
                     var levelUpEntry = versionDetails.EnumerateArray()
