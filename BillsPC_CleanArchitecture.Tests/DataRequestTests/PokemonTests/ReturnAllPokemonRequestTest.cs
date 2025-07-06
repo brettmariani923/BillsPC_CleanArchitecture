@@ -1,10 +1,10 @@
 ﻿using BillsPC_CleanArchitecture.Tests.Helpers;
-using BillsPC_CleanArchitecture.Data.Requests.Pokemon;
+using BillsPC_CleanArchitecture.Data.Requests;
 using Xunit;
 
 namespace BillsPC_CleanArchitecture.Tests.DataRequestTests.PokemonTests
 {
-    public class ReturnAllPokemonTest : DataTest
+    public class ReturnAllPokemonRequestTest : DataTest
     {
         [Fact]
         public async Task ReturnAllPokemon_ShouldReturn_AllPokemon()
