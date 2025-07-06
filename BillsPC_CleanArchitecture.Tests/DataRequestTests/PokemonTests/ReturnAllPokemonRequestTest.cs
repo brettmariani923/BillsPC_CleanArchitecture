@@ -20,5 +20,6 @@ namespace BillsPC_CleanArchitecture.Tests.DataRequestTests.PokemonTests
             Assert.NotEmpty(result);
             Assert.All(result, pokemon => Assert.False(string.IsNullOrWhiteSpace(pokemon.Name)));
         }
+
     }
 }

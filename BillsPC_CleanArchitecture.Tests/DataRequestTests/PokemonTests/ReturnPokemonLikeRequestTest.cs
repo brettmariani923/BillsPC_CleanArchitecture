@@ -32,7 +32,7 @@ namespace BillsPC_CleanArchitecture.Tests.DataRequestTests.PokemonTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Empty(result); // Ensure an empty list is returned when no match is found
+            Assert.Empty(result); 
         }
 
         [Fact]
