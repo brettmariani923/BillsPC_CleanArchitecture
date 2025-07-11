@@ -85,7 +85,7 @@
                 <input type="hidden" name="pokemon2Status" value="@Model.Pokemon2Status" />
                 <input type="hidden" name="pokemon1SleepCounter" value="@Model.Pokemon1SleepCounter" />
                 <input type="hidden" name="pokemon2SleepCounter" value="@Model.Pokemon2SleepCounter" />
-                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog)" />
+                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog ?? "")" />
             </form>
         }
         else
@@ -101,7 +101,7 @@
                 <input type="hidden" name="pokemon2Status" value="@Model.Pokemon2Status" />
                 <input type="hidden" name="pokemon1SleepCounter" value="@Model.Pokemon1SleepCounter" />
                 <input type="hidden" name="pokemon2SleepCounter" value="@Model.Pokemon2SleepCounter" />
-                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog)" />
+                <input type="hidden" name="battleLog" value="@WebUtility.HtmlEncode(Model.BattleLog ?? "")" />
             </form>
 
             <script>
@@ -132,7 +132,6 @@
 
         const maxHP = parseInt(bar.dataset.max);
         const currentHP = parseInt(bar.dataset.current);
-
         const storedHP = parseInt(localStorage.getItem(storageKey));
 
         if (!isNaN(storedHP) && storedHP !== currentHP) {
@@ -146,13 +145,11 @@
             bar.style.transition = "width 0.6s ease";
             bar.style.width = toPercent + "%";
         } else {
-            // No animation, just set the final width
             const widthPercent = (currentHP * 100) / maxHP;
             bar.style.transition = "none";
             bar.style.width = widthPercent + "%";
         }
 
-        // Store current value for next comparison
         localStorage.setItem(storageKey, currentHP);
     }
 
@@ -164,42 +161,39 @@
         }
     }
 
-   window.addEventListener('DOMContentLoaded', () => {
-    clearHPMemoryIfBattleOver();
+    window.addEventListener('DOMContentLoaded', () => {
+        clearHPMemoryIfBattleOver();
 
-    animateHPBarOnce('player-hp-bar', 'player-hp');
-    animateHPBarOnce('ai-hp-bar', 'ai-hp');
-
-    const isPlayerTurn = "@Model.IsPlayerOneTurn".toLowerCase() === "true";
-    const battleOver = "@Model.BattleOver".toLowerCase() === "true";
-
-    if (!battleOver && isPlayerTurn) {
-        document.querySelectorAll('#moveForm button.move-button').forEach(button => {
-            button.addEventListener('click', function () {
-                document.getElementById('moveNameInput').value = this.getAttribute('data-move');
-                performAttack('pokemon1-sprite', 'pokemon2-sprite');
-                animateHPBarOnce('ai-hp-bar', 'ai-hp');
-
-                setTimeout(() => {
-                    document.getElementById('moveForm').submit();
-                }, 800);
-            });
-        });
-    }
-
-    if (!battleOver && !isPlayerTurn) {
-        performAttack('pokemon2-sprite', 'pokemon1-sprite');
         animateHPBarOnce('player-hp-bar', 'player-hp');
+        animateHPBarOnce('ai-hp-bar', 'ai-hp');
 
-        setTimeout(() => {
-            document.getElementById('aiMoveForm')?.submit();
-        }, 800);
-    }
-});
+        const isPlayerTurn = "@Model.IsPlayerOneTurn".toLowerCase() === "true";
+        const battleOver = "@Model.BattleOver".toLowerCase() === "true";
 
+        if (!battleOver && isPlayerTurn) {
+            document.querySelectorAll('#moveForm button.move-button').forEach(button => {
+                button.addEventListener('click', function () {
+                    document.getElementById('moveNameInput').value = this.getAttribute('data-move');
+                    performAttack('pokemon1-sprite', 'pokemon2-sprite');
+                    animateHPBarOnce('ai-hp-bar', 'ai-hp');
+
+                    setTimeout(() => {
+                        document.getElementById('moveForm').submit();
+                    }, 800);
+                });
+            });
+        }
+
+        if (!battleOver && !isPlayerTurn) {
+            performAttack('pokemon2-sprite', 'pokemon1-sprite');
+            animateHPBarOnce('player-hp-bar', 'player-hp');
+
+            setTimeout(() => {
+                document.getElementById('aiMoveForm')?.submit();
+            }, 800);
+        }
+    });
 </script>
 
-
-
-    <script src="/js/BattleStyles.js"></script>
+<script src="/js/BattleStyles.js"></script>
 </div>

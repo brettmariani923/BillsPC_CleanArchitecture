@@ -31,7 +31,6 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             return View("ReturnAllPokemon", allPokemon);
         }
 
-
         [HttpGet]
         public IActionResult EnterName()
         {

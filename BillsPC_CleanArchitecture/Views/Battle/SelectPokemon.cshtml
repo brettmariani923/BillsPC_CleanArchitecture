@@ -5,10 +5,9 @@
 }
 
 <style>
-    /* Full screen container centering content */
     .center-container {
         display: flex;
-        justify-content: center; /* horizontal center */
+        justify-content: center; 
         flex-direction: column;
         align-items: center;
     }
@@ -18,7 +17,7 @@
     <div style="display: inline-block; border: 3px solid red; border-radius: 8px; padding: 16px; background: white;">
         <h2>Select Pokémon for Battle</h2>
 
-        <!-- Existing team battle form -->
+        <!-- Single battle form -->
         <form method="post" asp-action="StartBattle">
             <div class="mb-3">
                 <label for="pokemon1Id" class="form-label">Select Pokémon 1</label>
@@ -47,7 +46,7 @@
 
         <hr />
 
-        <!-- New form for team battle -->
+        <!-- Form for team battle -->
         <form method="post" asp-action="StartTeamBattle">
             <p>Or, battle your whole team vs a random AI team of 6 Pokémon!</p>
 

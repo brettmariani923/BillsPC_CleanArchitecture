@@ -208,7 +208,9 @@
         </p>
     }
 </div>
+
 <script src="~/js/battlestyles.js"></script>
+
 <script>
   function bindMoveButtons() {
     document.querySelectorAll('#moveForm button.move-button').forEach(button => {
@@ -218,7 +220,7 @@
 
         document.getElementById('moveNameInput').value = move;
 
-        // Optional: play animation here if you want
+        // Optional: play animation here
 
         setTimeout(() => {
           document.getElementById('moveForm').submit();
