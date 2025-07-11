@@ -7,9 +7,7 @@
 
         public int Pokemon1CurrentHP { get; set; }
         public int Pokemon2CurrentHP { get; set; }
-
         public string MoveName { get; set; } = string.Empty;
-
         public string Pokemon1Status { get; set; } = "None";
         public string Pokemon2Status { get; set; } = "None";
 

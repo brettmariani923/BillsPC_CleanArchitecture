@@ -11,7 +11,6 @@ namespace BillsPC_CleanArchitecture.Application.Models
         public int Pokemon1CurrentHP { get; set; }
         public int Pokemon2CurrentHP { get; set; }
   
-
         public List<MoveInfo_DTO> Pokemon1Moves { get; set; } = new();
         public List<MoveInfo_DTO> Pokemon2Moves { get; set; } = new();
 
@@ -48,16 +47,11 @@ namespace BillsPC_CleanArchitecture.Application.Models
         public CurrentTeam_DTO PlayerActive => PlayerTeam?.Count > PlayerActiveIndex ? PlayerTeam[PlayerActiveIndex] : null;
         public CurrentTeam_DTO AIActive => AITeam?.Count > AIActiveIndex ? AITeam[AIActiveIndex] : null;
 
-        public CurrentTeam_DTO ActiveSlot1 => PlayerActive;
-        public CurrentTeam_DTO ActiveSlot2 => AIActive;
-
         public bool RequireSwitch { get; set; } = false;
         public int PlayerPreviousHP { get; set; }
 
         public int AIPreviousHP { get; set; }
-        public string PlayerTeamJson { get; set; }
-        public string AITeamJson { get; set; }
-        public bool IsTeamBattle { get; set; } // already exists
+   
 
 
     }

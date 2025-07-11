@@ -17,7 +17,6 @@ namespace BillsPC_CleanArchitecture.Data.Requests
 
     // Go to the DataAccess class in the Implementation folder next to see how this request is executed.
 
-
     public class ReturnAllPokemonRequest : IDataFetchList<Pokemon_DTO>
     {
         public string GetSql()

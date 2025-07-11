@@ -10,7 +10,7 @@ namespace BillsPC_CleanArchitecture.Data.Implementation
     public class SqlConnectionFactory : IDbConnectionFactory
     //This class implements IDbConnectionFactory, meaning it must define a method called NewConnection() that returns an IDbConnection.
     {
-        #region Private pokemons
+        #region Private pokemon
 
         private readonly string _connectionString;
         //Stores the database connection string needed to create a SqlConnection.

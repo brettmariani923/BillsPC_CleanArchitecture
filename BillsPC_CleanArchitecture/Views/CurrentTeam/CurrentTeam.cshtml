@@ -1,26 +1,23 @@
 ﻿@model List<BillsPC_CleanArchitecture.Data.DTO.CurrentTeam_DTO>
 
 <style>
-    /* Center the container horizontally */
     .center-container {
         display: flex;
-        justify-content: center; /* horizontal center */
+        justify-content: center; 
         padding: 16px;
     }
 
-    /* Styled container with border and padding */
     .table-wrapper {
         border: 3px solid red;
         border-radius: 8px;
         padding: 16px;
         background-color: white;
-        overflow-x: auto; /* Scroll horizontally if needed */
-        max-width: 100%; /* Don't exceed viewport width */
+        overflow-x: auto; 
+        max-width: 100%; 
     }
 
-    /* Table styling */
     table {
-        min-width: 1000px; /* enforce minimum width for horizontal scroll */
+        min-width: 1000px; 
         width: 100%;
         border-collapse: collapse;
     }
@@ -28,22 +25,21 @@
     th, td {
         padding: 8px;
         border: 1px solid #ddd;
-        text-align: center; /* horizontal center */
-        vertical-align: middle; /* vertical center */
+        text-align: center; 
+        vertical-align: middle; 
     }
 
     th {
         background-color: #f8f9fa;
     }
 
-    img {
+    table img {
         width: 80px;
         height: auto;
         display: block;
-        margin: 0 auto; /* center images horizontally */
+        margin: 0 auto; 
     }
 </style>
-
 
 <div class="center-container">
     <div class="table-wrapper">

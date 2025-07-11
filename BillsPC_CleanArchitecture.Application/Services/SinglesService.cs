@@ -147,7 +147,6 @@ public class SinglesService : ISinglesService
             status1, status2, sleep1, sleep2, log.ToString(), true, battleOver);
     }
 
-
     private async Task<(Pokemon_DTO, List<MoveInfo_DTO>)> GetPokemonWithMovesAsync(int id)
     {
         var pokemon = await _data.FetchAsync(new ReturnPokemonByIdRequest(id));
@@ -180,7 +179,6 @@ public class SinglesService : ISinglesService
             BattleOver = battleOver
         };
     }
-
     private bool HandleSleep(ref string status, ref int counter, string name, StringBuilder log)
     {
         if (status == "Sleep")

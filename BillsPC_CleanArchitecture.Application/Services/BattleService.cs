@@ -286,7 +286,7 @@ public class BattleService : IBattleService
 
         return model;
     }
-
+    //Should probably be separate methods, but keeping it together for now. Should probably separate switching into its own method.
 
     public async Task<BattleViewModel> UseAIMoveAsync(BattleMoveRequest request)
     {
@@ -432,7 +432,6 @@ public class BattleService : IBattleService
         return model;
     }
 
-
     public int CalculateDamage(CurrentTeam_DTO attacker, CurrentTeam_DTO defender, int movePower, string moveType, bool isSpecial)
     {
         const int level = 50;
@@ -501,6 +500,5 @@ public class BattleService : IBattleService
             BattleLog = $"The battle between {player.Name} and {opponent.Name} begins!\n"
         };
     }
-
 
 }

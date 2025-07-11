@@ -5,5 +5,4 @@ public interface IPokeApiService
     Task<string> GetPokemonSpriteUrlAsync(string name);
     Task<List<MoveInfo_DTO>> GetPokemonMovesAsync(string pokemonName);
 
-
 }
