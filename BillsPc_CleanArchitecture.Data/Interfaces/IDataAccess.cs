@@ -26,5 +26,7 @@
         public Task<IEnumerable<TResponse>> FetchListAsync<TResponse>(IDataFetchList<TResponse> request);
 
     }
+    //this class provides a contract for how the application should interact with the database.
+    //In Clean Architecture, we separate what the code does (interface) from how it does it (implementation). This interface is part of the Data Access Layer, and its purpose is to abstract away raw SQL execution using different types of requests.
 }
 

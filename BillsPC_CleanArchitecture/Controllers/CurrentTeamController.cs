@@ -12,7 +12,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> TeamBuilder()
         {
             var team = await _pokemonService.GetTeamAsync();
             return View(team);
@@ -28,17 +28,18 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             if (pokemonId == null)
             {
                 ModelState.AddModelError("", "Pokemon not found");
-                return RedirectToAction("Index");
+                return RedirectToAction("TeamBuilder");
             }
 
             await _pokemonService.AddPokemonToTeamAsync(slot, pokemonId.Value);
-            return RedirectToAction("Index");
+            return RedirectToAction("TeamBuilder");
         }
+
         [HttpPost]
         public async Task<IActionResult> Remove(int slot)
         {
             await _pokemonService.RemovePokemonFromTeamAsync(slot);
-            return RedirectToAction("Index");
+            return RedirectToAction("TeamBuilder");
         }
 
         [HttpPost]
@@ -51,11 +52,11 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             if (pokemonId == null)
             {
                 ModelState.AddModelError("", "Pokemon not found");
-                return RedirectToAction("Index");
+                return RedirectToAction("TeamBuilder");
             }
 
             await _pokemonService.AddPokemonToTeamAsync(slot, pokemonId.Value);
-            return RedirectToAction("Index");
+            return RedirectToAction("TeamBuilder");
         }
 
         [HttpGet]

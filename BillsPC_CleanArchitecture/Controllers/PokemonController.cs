@@ -5,7 +5,7 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
 {
     //Part 1 (very beginning): This is where it starts. We start by making our call to PokemonService.
     //A user on one of the view pages will press a search button or the info tab, and this is where the process of getting them the info they request begins.
-    //A good thing to remember is that views move through controllers, and controllers move through services. The controller 
+    //A good thing to repokemon is that views move through controllers, and controllers move through services. The controller 
     //is your entrypoint, it accepts requests and returns ressponses. Go to PokemonService.cs in the Application layer next for the next step in the process.
 
     //Part 2 (dont read until after completing the steps): This is where the results are returned to the view for the user to see. It takes that information we worked so hard to get from different layers and returns it to the view for the user to see.

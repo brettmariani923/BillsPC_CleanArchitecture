@@ -21,6 +21,7 @@ namespace BillsPC_CleanArchitecture.Data.Implementation
     //from the database to our website. If you have any questions about it, feel free to ask me about it in on discord and we can go over it more.
     // Now that we have safely recieved the data we need, we can return to the PokemonService class in the Application layer to see how it uses this data.
 
+    //DataAccess is a generic, reusable class that performs database operations using SQL strings and parameters provided by request objects. It implements an interface called IDataAccess, ensuring it exposes a common set of methods for executing queries.
     public class DataAccess : IDataAccess
     {
         #region Private Fields
@@ -29,6 +30,10 @@ namespace BillsPC_CleanArchitecture.Data.Implementation
 
         #endregion
 
+       // This field stores an object responsible for creating database connections.
+
+        //IDbConnectionFactory is likely a custom interface you wrote to return a DbConnection(e.g., SQL Server connection) — allowing dependency injection and easier unit testing.
+
         #region Constructor
 
         public DataAccess(IDbConnectionFactory connectionFactory)
@@ -36,17 +41,36 @@ namespace BillsPC_CleanArchitecture.Data.Implementation
             _connectionFactory = connectionFactory;
         }
 
+        //When this class is created, the constructor requires an IDbConnectionFactory to be passed in. That factory is stored and used to open database connections later.
+
         #endregion
 
         #region Public IDataAccess Methods
 
         public async Task<int> ExecuteAsync(IDataExecute request) => await HandleRequest(async _ => await _.ExecuteAsync(request.GetSql(), request.GetParameters()));
+        //Used to run INSERT, UPDATE, or DELETE SQL statements.
 
+        //Accepts an IDataExecute request object.
+
+        //Calls request.GetSql() and request.GetParameters() to get the SQL query and parameters.
+
+        //Internally runs the command using Dapper’s ExecuteAsync() method and returns how many rows were affected.
         public async Task<TResponse?> FetchAsync<TResponse>(IDataFetch<TResponse> request) => await HandleRequest(async _ => await _.QueryFirstOrDefaultAsync<TResponse>(request.GetSql(), request.GetParameters()));
+        //Used to fetch a single record from the database.
 
+        //The generic type TResponse is the type of object to map the result to.
+
+        //Calls Dapper's QueryFirstOrDefaultAsync<T>() — this returns one object or null if not found.
         public async Task<IEnumerable<TResponse>> FetchListAsync<TResponse>(IDataFetchList<TResponse> request) => await HandleRequest(async _ => await _.QueryAsync<TResponse>(request.GetSql(), request.GetParameters()));
+        //Used to fetch multiple records from the database.
+
+        //Returns a list of TResponse objects.
+
+        //Uses Dapper's QueryAsync<T>() to run the SQL and return a collection.
 
         #endregion
+
+        //These are the methods your services use to run SQL commands.
 
         #region Private Helper Method
 
@@ -58,7 +82,32 @@ namespace BillsPC_CleanArchitecture.Data.Implementation
 
             return await funcHandleRequest.Invoke(connection);
         }
+        //This is a reusable wrapper for opening the connection, executing the Dapper query, and returning the result.
 
+        //Steps:
+
+        //Calls _connectionFactory.NewConnection() to get a DbConnection.
+
+        //Opens the connection.
+
+        //Runs the lambda funcHandleRequest, which contains the actual database call logic (e.g., Dapper query).
+
+        //Returns the result.
+
+        //This method:
+
+        //Avoids repeating using var connection = ... in every method.
+
+        //Centralizes connection management.
+
+        //Supports clean async execution with minimal duplication.
         #endregion
     }
 }
+
+
+//Clean separation of concerns: The DataAccess class doesn't know or care what SQL is being run. It only executes it.
+
+//Reusability: You can plug in any SQL command via IDataExecute, IDataFetch, etc
+
+//Asynchronicity: All methods are async, which avoids blocking threads and supports scalable web applications.

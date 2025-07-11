@@ -6,7 +6,7 @@ namespace BillsPC_CleanArchitecture.Data.Tests
     public class SqlConnectionFactoryTests
     {
         [Theory]
-        [MemberData(nameof(Hidden.ConnectionStrings), MemberType = typeof(Hidden))]
+        [pokemonData(nameof(Hidden.ConnectionStrings), pokemonType = typeof(Hidden))]
         public void SqlConnectionFactory_Given_ConnectionString_IsValid_NewConnection_ShouldReturn_SqlConnection(string connectionString)
         {
             var connectionFactory = new SqlConnectionFactory(connectionString);

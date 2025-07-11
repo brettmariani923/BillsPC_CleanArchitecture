@@ -11,21 +11,15 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
     public class BattleController : Controller
     {
         private readonly IDataAccess _data;
-        private readonly IPokeApiService _pokeApiService;
-        private readonly IPokemonService _pokemonService;
         private readonly IBattleService _battleService;
         private readonly ISinglesService _singlesService;
 
         public BattleController(
             IDataAccess data,
-            IPokeApiService pokeApiService,
             ISinglesService SinglesService,
-            IPokemonService pokemonService,
             IBattleService battleService)  
         {
             _data = data;
-            _pokeApiService = pokeApiService;
-            _pokemonService = pokemonService;
             _singlesService = SinglesService;
             _battleService = battleService;  
         }
