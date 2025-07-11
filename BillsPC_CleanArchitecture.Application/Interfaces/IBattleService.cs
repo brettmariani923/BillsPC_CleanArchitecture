@@ -10,29 +10,10 @@ namespace BillsPC_CleanArchitecture.Application.Interfaces
 
         Task<BattleViewModel> StartTeamBattleAsync();
 
-        Task<BattleViewModel> UsePlayerMoveAsync(
-            int activeSlot1, int activeSlot2,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string moveName,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog,
-            string playerTeamJson, string aiTeamJson,
-            int? switchTo,
-            bool requireSwitch,
-            int previousPlayerHP,
-            int previousAIHP);
-
-        Task<BattleViewModel> UseAIMoveAsync(
-            int activeSlot1, int activeSlot2,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog,
-            string playerTeamJson, string aiTeamJson,
-            bool requireSwitch,
-            int previousPlayerHP,
-            int previousAIHP);
+        Task<BattleViewModel> UsePlayerMoveAsync(BattleMoveRequest request);
+        Task<BattleViewModel> UseAIMoveAsync(BattleMoveRequest request);
 
     }
 }
+//i am serializing and deserializing these moves to make the form submissions go quicker. because of that these variables have all of the values written out in the parameters,
+//  because I find when i try to put them all into a single value, it creates issues where it struggles to update them

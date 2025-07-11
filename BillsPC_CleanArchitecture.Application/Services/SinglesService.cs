@@ -39,82 +39,94 @@ public class SinglesService : ISinglesService
         };
     }
 
-    public async Task<BattleViewModel> UsePlayerMoveSinglesAsync(
-        int pokemon1Id, int pokemon2Id,
-        int pokemon1CurrentHP, int pokemon2CurrentHP,
-        string moveName,
-        string pokemon1Status, string pokemon2Status,
-        int pokemon1SleepCounter, int pokemon2SleepCounter,
-        string battleLog)
+    public async Task<BattleViewModel> UsePlayerMoveSinglesAsync(SingleBattleMoveRequest request)
     {
-        var (p1, p1Moves) = await GetPokemonWithMovesAsync(pokemon1Id);
-        var (p2, p2Moves) = await GetPokemonWithMovesAsync(pokemon2Id);
+        var (p1, p1Moves) = await GetPokemonWithMovesAsync(request.Pokemon1Id);
+        var (p2, p2Moves) = await GetPokemonWithMovesAsync(request.Pokemon2Id);
 
-        var log = new StringBuilder(battleLog);
+        var log = new StringBuilder(request.BattleLog);
 
-        if (HandleSleep(ref pokemon1Status, ref pokemon1SleepCounter, p1.Name, log))
+        var status1 = request.Pokemon1Status;
+        var sleep1 = request.Pokemon1SleepCounter;
+
+        if (HandleSleep(ref status1, ref sleep1, p1.Name, log))
         {
-            return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-                pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), false);
+            request.Pokemon1Status = status1;
+            request.Pokemon1SleepCounter = sleep1;
+
+            return CreateModel(p1, p2, p1Moves, p2Moves, request.Pokemon1CurrentHP, request.Pokemon2CurrentHP,
+                status1, request.Pokemon2Status, sleep1, request.Pokemon2SleepCounter, log.ToString(), false);
         }
 
-        if (pokemon1Status == "Paralyzed" && Random.Shared.Next(100) < 25)
+        if (status1 == "Paralyzed" && Random.Shared.Next(100) < 25)
         {
             log.AppendLine($"{p1.Name} is paralyzed and can't move!");
-            return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-                pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), false);
+
+            request.Pokemon1Status = status1; // sync updated status
+            request.Pokemon1SleepCounter = sleep1;
+
+            return CreateModel(p1, p2, p1Moves, p2Moves, request.Pokemon1CurrentHP, request.Pokemon2CurrentHP,
+                status1, request.Pokemon2Status, sleep1, request.Pokemon2SleepCounter, log.ToString(), false);
         }
 
-        if (string.IsNullOrWhiteSpace(moveName))
-            moveName = "Tackle";
+        if (string.IsNullOrWhiteSpace(request.MoveName))
+            request.MoveName = "Tackle";
 
-        var move = p1Moves.FirstOrDefault(m => string.Equals(m.Name, moveName, StringComparison.OrdinalIgnoreCase))
+        var move = p1Moves.FirstOrDefault(m => string.Equals(m.Name, request.MoveName, StringComparison.OrdinalIgnoreCase))
                    ?? new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal", IsSpecial = false };
 
         int damage = CalculateDamage(p1, p2, move.Power, move.Type, move.IsSpecial);
-        pokemon2CurrentHP = Math.Max(0, pokemon2CurrentHP - damage);
+        request.Pokemon2CurrentHP = Math.Max(0, request.Pokemon2CurrentHP - damage);
         log.AppendLine($"{p1.Name} used {move.Name} and dealt {damage} damage!");
 
-        ApplyStatusEffects(move.Name, p2.Name, ref pokemon2Status, ref pokemon2SleepCounter, log);
+        var status2 = request.Pokemon2Status;
+        var sleep2 = request.Pokemon2SleepCounter;
 
-        bool battleOver = pokemon2CurrentHP <= 0;
+        ApplyStatusEffects(move.Name, p2.Name, ref status2, ref sleep2, log);
+
+        request.Pokemon2Status = status2;
+        request.Pokemon2SleepCounter = sleep2;
+
+        bool battleOver = request.Pokemon2CurrentHP <= 0;
         if (battleOver)
             log.AppendLine($"{p2.Name} fainted!");
 
-        return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-            pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), false, battleOver);
+        return CreateModel(p1, p2, p1Moves, p2Moves, request.Pokemon1CurrentHP, request.Pokemon2CurrentHP,
+            status1, status2, sleep1, sleep2, log.ToString(), false, battleOver);
     }
 
-    public async Task<BattleViewModel> UseAIMoveSinglesAsync(
-        int pokemon1Id, int pokemon2Id,
-        int pokemon1CurrentHP, int pokemon2CurrentHP,
-        string pokemon1Status, string pokemon2Status,
-        int pokemon1SleepCounter, int pokemon2SleepCounter,
-        string battleLog)
+    public async Task<BattleViewModel> UseAIMoveSinglesAsync(SingleBattleMoveRequest request)
     {
-        var (p1, p1Moves) = await GetPokemonWithMovesAsync(pokemon1Id);
-        var (p2, p2Moves) = await GetPokemonWithMovesAsync(pokemon2Id);
+        var (p1, p1Moves) = await GetPokemonWithMovesAsync(request.Pokemon1Id);
+        var (p2, p2Moves) = await GetPokemonWithMovesAsync(request.Pokemon2Id);
 
-        var log = new StringBuilder(battleLog);
+        var log = new StringBuilder(request.BattleLog);
 
-        if (pokemon2Status == "Burned")
+        var status1 = request.Pokemon1Status;
+        var status2 = request.Pokemon2Status;
+        var sleep1 = request.Pokemon1SleepCounter;
+        var sleep2 = request.Pokemon2SleepCounter;
+        var hp1 = request.Pokemon1CurrentHP;
+        var hp2 = request.Pokemon2CurrentHP;
+
+        if (status2 == "Burned")
         {
             int burnDamage = Math.Max(1, p2.HP / 16);
-            pokemon2CurrentHP = Math.Max(0, pokemon2CurrentHP - burnDamage);
+            hp2 = Math.Max(0, hp2 - burnDamage);
             log.AppendLine($"{p2.Name} is hurt by its burn!");
         }
 
-        if (HandleSleep(ref pokemon2Status, ref pokemon2SleepCounter, p2.Name, log))
+        if (HandleSleep(ref status2, ref sleep2, p2.Name, log))
         {
-            return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-                pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), true);
+            return CreateModel(p1, p2, p1Moves, p2Moves, hp1, hp2,
+                status1, status2, sleep1, sleep2, log.ToString(), true);
         }
 
-        if (pokemon2Status == "Paralyzed" && Random.Shared.Next(100) < 25)
+        if (status2 == "Paralyzed" && Random.Shared.Next(100) < 25)
         {
             log.AppendLine($"{p2.Name} is paralyzed and can't move!");
-            return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-                pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), true);
+            return CreateModel(p1, p2, p1Moves, p2Moves, hp1, hp2,
+                status1, status2, sleep1, sleep2, log.ToString(), true);
         }
 
         var move = p2Moves.Count > 0
@@ -122,18 +134,19 @@ public class SinglesService : ISinglesService
             : new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal", IsSpecial = false };
 
         int damage = CalculateDamage(p2, p1, move.Power, move.Type, move.IsSpecial);
-        pokemon1CurrentHP = Math.Max(0, pokemon1CurrentHP - damage);
+        hp1 = Math.Max(0, hp1 - damage);
         log.AppendLine($"{p2.Name} used {move.Name} and dealt {damage} damage!");
 
-        ApplyStatusEffects(move.Name, p1.Name, ref pokemon1Status, ref pokemon1SleepCounter, log);
+        ApplyStatusEffects(move.Name, p1.Name, ref status1, ref sleep1, log);
 
-        bool battleOver = pokemon1CurrentHP <= 0;
+        bool battleOver = hp1 <= 0;
         if (battleOver)
             log.AppendLine($"{p1.Name} fainted!");
 
-        return CreateModel(p1, p2, p1Moves, p2Moves, pokemon1CurrentHP, pokemon2CurrentHP,
-            pokemon1Status, pokemon2Status, pokemon1SleepCounter, pokemon2SleepCounter, log.ToString(), true, battleOver);
+        return CreateModel(p1, p2, p1Moves, p2Moves, hp1, hp2,
+            status1, status2, sleep1, sleep2, log.ToString(), true, battleOver);
     }
+
 
     private async Task<(Pokemon_DTO, List<MoveInfo_DTO>)> GetPokemonWithMovesAsync(int id)
     {

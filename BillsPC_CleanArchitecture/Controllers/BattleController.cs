@@ -2,8 +2,6 @@
 using BillsPC_CleanArchitecture.Data.Interfaces;
 using BillsPC_CleanArchitecture.Application.Models;
 using BillsPC_CleanArchitecture.Data.Requests;
-using System.Text;
-using System.Text.Json;
 using BillsPC_CleanArchitecture.Application.Interfaces;
 
 namespace BillsPC_CleanArchitecture.Api.Controllers
@@ -43,58 +41,16 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UsePlayerMove(
-            int activeSlot1, int activeSlot2,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string moveName,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog,
-            string playerTeamJson, string aiTeamJson,
-            int? switchTo,
-            bool requireSwitch,
-            int previousPlayerHP,
-            int previousAIHP)
+        public async Task<IActionResult> UsePlayerMove([FromForm] BattleMoveRequest request)
         {
-            var vm = await _battleService.UsePlayerMoveAsync(
-                activeSlot1, activeSlot2,
-                pokemon1CurrentHP, pokemon2CurrentHP,
-                moveName,
-                pokemon1Status, pokemon2Status,
-                pokemon1SleepCounter, pokemon2SleepCounter,
-                battleLog,
-                playerTeamJson, aiTeamJson,
-                switchTo,
-                requireSwitch,
-                previousPlayerHP,
-                previousAIHP);
-
+            var vm = await _battleService.UsePlayerMoveAsync(request);
             return View("_BattleView", vm);
         }
 
         [HttpPost]
-        public async Task<IActionResult> UseAIMove(
-            int activeSlot1, int activeSlot2,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog,
-            string playerTeamJson, string aiTeamJson,
-            bool requireSwitch,
-            int previousPlayerHP,
-            int previousAIHP)
+        public async Task<IActionResult> UseAIMove([FromForm] BattleMoveRequest request)
         {
-            var vm = await _battleService.UseAIMoveAsync(
-                activeSlot1, activeSlot2,
-                pokemon1CurrentHP, pokemon2CurrentHP,
-                pokemon1Status, pokemon2Status,
-                pokemon1SleepCounter, pokemon2SleepCounter,
-                battleLog,
-                playerTeamJson, aiTeamJson,
-                requireSwitch,
-                previousPlayerHP,
-                previousAIHP);
-
+            var vm = await _battleService.UseAIMoveAsync(request);
             return View("_BattleView", vm);
         }
 
@@ -105,7 +61,6 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
             return View("SelectPokemon", allPokemon.ToList());
         }
 
-
         [HttpPost]
         public async Task<IActionResult> StartBattle(int pokemon1Id, int pokemon2Id)
         {
@@ -114,45 +69,19 @@ namespace BillsPC_CleanArchitecture.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UsePlayerMoveSingle(
-            int pokemon1Id, int pokemon2Id,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string moveName,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog)
+        public async Task<IActionResult> UsePlayerMoveSingle([FromForm] SingleBattleMoveRequest request)
         {
-            var model = await _singlesService.UsePlayerMoveSinglesAsync(
-                pokemon1Id, pokemon2Id,
-                pokemon1CurrentHP, pokemon2CurrentHP,
-                moveName,
-                pokemon1Status, pokemon2Status,
-                pokemon1SleepCounter, pokemon2SleepCounter,
-                battleLog);
-
+            var model = await _singlesService.UsePlayerMoveSinglesAsync(request);
             return View("Singles", model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> UseAIMoveSingle(
-            int pokemon1Id, int pokemon2Id,
-            int pokemon1CurrentHP, int pokemon2CurrentHP,
-            string pokemon1Status, string pokemon2Status,
-            int pokemon1SleepCounter, int pokemon2SleepCounter,
-            string battleLog)
+        public async Task<IActionResult> UseAIMoveSingle([FromForm] SingleBattleMoveRequest request)
         {
-            var model = await _singlesService.UseAIMoveSinglesAsync(
-                pokemon1Id, pokemon2Id,
-                pokemon1CurrentHP, pokemon2CurrentHP,
-                pokemon1Status, pokemon2Status,
-                pokemon1SleepCounter, pokemon2SleepCounter,
-                battleLog);
-
+            var model = await _singlesService.UseAIMoveSinglesAsync(request);
             return View("Singles", model);
         }
 
     }
-
-
 }
 

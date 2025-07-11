@@ -94,45 +94,34 @@ public class BattleService : IBattleService
         return vm;
     }
 
-    public async Task<BattleViewModel> UsePlayerMoveAsync(
-       int activeSlot1, int activeSlot2,
-       int pokemon1CurrentHP, int pokemon2CurrentHP,
-       string moveName,
-       string pokemon1Status, string pokemon2Status,
-       int pokemon1SleepCounter, int pokemon2SleepCounter,
-       string battleLog,
-       string playerTeamJson, string aiTeamJson,
-       int? switchTo,
-       bool requireSwitch,
-       int previousPlayerHP,
-       int previousAIHP)
+    public async Task<BattleViewModel> UsePlayerMoveAsync(BattleMoveRequest request)
     {
-        var playerJson = Encoding.UTF8.GetString(Convert.FromBase64String(playerTeamJson));
-        var aiJson = Encoding.UTF8.GetString(Convert.FromBase64String(aiTeamJson));
+        var playerJson = Encoding.UTF8.GetString(Convert.FromBase64String(request.PlayerTeamJson));
+        var aiJson = Encoding.UTF8.GetString(Convert.FromBase64String(request.AITeamJson));
 
         var playerTeam = JsonSerializer.Deserialize<List<CurrentTeam_DTO>>(playerJson);
         var aiTeam = JsonSerializer.Deserialize<List<CurrentTeam_DTO>>(aiJson);
 
-        var logBuilder = new StringBuilder(battleLog);
+        var logBuilder = new StringBuilder(request.BattleLog);
 
-        if (requireSwitch && !switchTo.HasValue)
+        if (request.RequireSwitch && !request.SwitchTo.HasValue)
         {
             return new BattleViewModel
             {
                 PlayerTeam = playerTeam,
                 AITeam = aiTeam,
-                PlayerActiveIndex = activeSlot1,
-                AIActiveIndex = activeSlot2,
-                PlayerCurrentHP = pokemon1CurrentHP,
-                AICurrentHP = pokemon2CurrentHP,
-                PlayerPreviousHP = previousPlayerHP,
-                AIPreviousHP = previousAIHP,
-                PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(playerTeam[activeSlot1].Name),
-                AIMoves = await _pokeApiService.GetPokemonMovesAsync(aiTeam[activeSlot2].Name),
-                PlayerStatus = pokemon1Status,
-                AIStatus = pokemon2Status,
-                PlayerSleepCounter = pokemon1SleepCounter,
-                AISleepCounter = pokemon2SleepCounter,
+                PlayerActiveIndex = request.ActiveSlot1,
+                AIActiveIndex = request.ActiveSlot2,
+                PlayerCurrentHP = request.Pokemon1CurrentHP,
+                AICurrentHP = request.Pokemon2CurrentHP,
+                PlayerPreviousHP = request.PreviousPlayerHP,
+                AIPreviousHP = request.PreviousAIHP,
+                PlayerMoves = await _pokeApiService.GetPokemonMovesAsync(playerTeam[request.ActiveSlot1].Name),
+                AIMoves = await _pokeApiService.GetPokemonMovesAsync(aiTeam[request.ActiveSlot2].Name),
+                PlayerStatus = request.Pokemon1Status,
+                AIStatus = request.Pokemon2Status,
+                PlayerSleepCounter = request.Pokemon1SleepCounter,
+                AISleepCounter = request.Pokemon2SleepCounter,
                 BattleLog = logBuilder.ToString(),
                 IsPlayerTurn = false,
                 BattleOver = false,
@@ -140,19 +129,18 @@ public class BattleService : IBattleService
             };
         }
 
-        if (switchTo.HasValue)
+        if (request.SwitchTo.HasValue)
         {
-            int newActiveIndex = switchTo.Value;
+            int newActiveIndex = request.SwitchTo.Value;
 
             if (newActiveIndex >= 0 && newActiveIndex < playerTeam.Count && playerTeam[newActiveIndex].CurrentHP > 0)
             {
-                var oldActiveName = playerTeam[activeSlot1].Name;
+                var oldActiveName = playerTeam[request.ActiveSlot1].Name;
                 var newActive = playerTeam[newActiveIndex];
 
                 logBuilder.AppendLine($"{oldActiveName} was switched out for {newActive.Name}!");
 
-                // Parallelize fetching moves for newActive and AI active pokemon
-                var pTwo = aiTeam[activeSlot2];
+                var pTwo = aiTeam[request.ActiveSlot2];
                 var pTwoMovesTask = _pokeApiService.GetPokemonMovesAsync(pTwo.Name);
                 var newActiveMovesTask = _pokeApiService.GetPokemonMovesAsync(newActive.Name);
 
@@ -163,17 +151,17 @@ public class BattleService : IBattleService
                     PlayerTeam = playerTeam,
                     AITeam = aiTeam,
                     PlayerActiveIndex = newActiveIndex,
-                    AIActiveIndex = activeSlot2,
+                    AIActiveIndex = request.ActiveSlot2,
                     PlayerCurrentHP = newActive.CurrentHP,
-                    AICurrentHP = pokemon2CurrentHP,
+                    AICurrentHP = request.Pokemon2CurrentHP,
                     PlayerPreviousHP = newActive.CurrentHP,
-                    AIPreviousHP = pokemon2CurrentHP,
+                    AIPreviousHP = request.Pokemon2CurrentHP,
                     PlayerMoves = newActiveMovesTask.Result,
                     AIMoves = pTwoMovesTask.Result,
                     PlayerStatus = "None",
-                    AIStatus = pokemon2Status,
+                    AIStatus = request.Pokemon2Status,
                     PlayerSleepCounter = 0,
-                    AISleepCounter = pokemon2SleepCounter,
+                    AISleepCounter = request.Pokemon2SleepCounter,
                     BattleLog = logBuilder.ToString(),
                     IsPlayerTurn = false,
                     BattleOver = false,
@@ -182,26 +170,26 @@ public class BattleService : IBattleService
             }
             else
             {
-                var playerMovesTask = _pokeApiService.GetPokemonMovesAsync(playerTeam[activeSlot1].Name);
-                var aiMovesTask = _pokeApiService.GetPokemonMovesAsync(aiTeam[activeSlot2].Name);
+                var playerMovesTask = _pokeApiService.GetPokemonMovesAsync(playerTeam[request.ActiveSlot1].Name);
+                var aiMovesTask = _pokeApiService.GetPokemonMovesAsync(aiTeam[request.ActiveSlot2].Name);
                 await Task.WhenAll(playerMovesTask, aiMovesTask);
 
                 return new BattleViewModel
                 {
                     PlayerTeam = playerTeam,
                     AITeam = aiTeam,
-                    PlayerActiveIndex = activeSlot1,
-                    AIActiveIndex = activeSlot2,
-                    PlayerCurrentHP = pokemon1CurrentHP,
-                    AICurrentHP = pokemon2CurrentHP,
-                    PlayerPreviousHP = previousPlayerHP,
-                    AIPreviousHP = previousAIHP,
+                    PlayerActiveIndex = request.ActiveSlot1,
+                    AIActiveIndex = request.ActiveSlot2,
+                    PlayerCurrentHP = request.Pokemon1CurrentHP,
+                    AICurrentHP = request.Pokemon2CurrentHP,
+                    PlayerPreviousHP = request.PreviousPlayerHP,
+                    AIPreviousHP = request.PreviousAIHP,
                     PlayerMoves = playerMovesTask.Result,
                     AIMoves = aiMovesTask.Result,
-                    PlayerStatus = pokemon1Status,
-                    AIStatus = pokemon2Status,
-                    PlayerSleepCounter = pokemon1SleepCounter,
-                    AISleepCounter = pokemon2SleepCounter,
+                    PlayerStatus = request.Pokemon1Status,
+                    AIStatus = request.Pokemon2Status,
+                    PlayerSleepCounter = request.Pokemon1SleepCounter,
+                    AISleepCounter = request.Pokemon2SleepCounter,
                     BattleLog = logBuilder.ToString(),
                     IsPlayerTurn = true,
                     BattleOver = false,
@@ -210,46 +198,44 @@ public class BattleService : IBattleService
             }
         }
 
-        var p1 = playerTeam[activeSlot1];
-        var p2 = aiTeam[activeSlot2];
+        var p1 = playerTeam[request.ActiveSlot1];
+        var p2 = aiTeam[request.ActiveSlot2];
 
-        // Parallelize getting moves for both p1 and p2:
         var p1MovesTask = _pokeApiService.GetPokemonMovesAsync(p1.Name);
         var p2MovesTask = _pokeApiService.GetPokemonMovesAsync(p2.Name);
-
         await Task.WhenAll(p1MovesTask, p2MovesTask);
 
         var p1Moves = p1MovesTask.Result;
         var p2Moves = p2MovesTask.Result;
 
-        int p1PrevHP = pokemon1CurrentHP;
-        int p2PrevHP = pokemon2CurrentHP;
+        int p1PrevHP = request.Pokemon1CurrentHP;
+        int p2PrevHP = request.Pokemon2CurrentHP;
 
-        var selectedMove = p1Moves.FirstOrDefault(m => string.Equals(m.Name, moveName, StringComparison.OrdinalIgnoreCase))
-                           ?? new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal", IsSpecial = false };
+        var selectedMove = p1Moves.FirstOrDefault(m => string.Equals(m.Name, request.MoveName, StringComparison.OrdinalIgnoreCase))
+                            ?? new MoveInfo_DTO { Name = "Tackle", Power = 40, Type = "normal", IsSpecial = false };
 
         int damage = CalculateDamage(p1, p2, selectedMove.Power, selectedMove.Type, selectedMove.IsSpecial);
-        int updatedAIHP = Math.Max(0, pokemon2CurrentHP - damage);
+        int updatedAIHP = Math.Max(0, request.Pokemon2CurrentHP - damage);
 
         logBuilder.AppendLine($"{p1.Name} used {selectedMove.Name} and dealt {damage} damage!");
-        aiTeam[activeSlot2].CurrentHP = updatedAIHP;
+        aiTeam[request.ActiveSlot2].CurrentHP = updatedAIHP;
 
         var model = new BattleViewModel
         {
             PlayerTeam = playerTeam,
             AITeam = aiTeam,
-            PlayerActiveIndex = activeSlot1,
-            AIActiveIndex = activeSlot2,
-            PlayerCurrentHP = pokemon1CurrentHP,
+            PlayerActiveIndex = request.ActiveSlot1,
+            AIActiveIndex = request.ActiveSlot2,
+            PlayerCurrentHP = request.Pokemon1CurrentHP,
             AICurrentHP = updatedAIHP,
             PlayerPreviousHP = p1PrevHP,
             AIPreviousHP = p2PrevHP,
             PlayerMoves = p1Moves,
             AIMoves = p2Moves,
-            PlayerStatus = pokemon1Status,
-            AIStatus = pokemon2Status,
-            PlayerSleepCounter = pokemon1SleepCounter,
-            AISleepCounter = pokemon2SleepCounter,
+            PlayerStatus = request.Pokemon1Status,
+            AIStatus = request.Pokemon2Status,
+            PlayerSleepCounter = request.Pokemon1SleepCounter,
+            AISleepCounter = request.Pokemon2SleepCounter,
             BattleLog = logBuilder.ToString(),
             IsPlayerTurn = true,
             BattleOver = false,
@@ -301,54 +287,46 @@ public class BattleService : IBattleService
         return model;
     }
 
-    public async Task<BattleViewModel> UseAIMoveAsync(
-         int activeSlot1, int activeSlot2,
-         int pokemon1CurrentHP, int pokemon2CurrentHP,
-         string pokemon1Status, string pokemon2Status,
-         int pokemon1SleepCounter, int pokemon2SleepCounter,
-         string battleLog,
-         string playerTeamJson, string aiTeamJson,
-         bool requireSwitch,
-         int previousPlayerHP,
-         int previousAIHP)
+
+    public async Task<BattleViewModel> UseAIMoveAsync(BattleMoveRequest request)
     {
-        var playerJson = Encoding.UTF8.GetString(Convert.FromBase64String(playerTeamJson));
-        var aiJson = Encoding.UTF8.GetString(Convert.FromBase64String(aiTeamJson));
+        var playerJson = Encoding.UTF8.GetString(Convert.FromBase64String(request.PlayerTeamJson));
+        var aiJson = Encoding.UTF8.GetString(Convert.FromBase64String(request.AITeamJson));
 
         var playerTeam = JsonSerializer.Deserialize<List<CurrentTeam_DTO>>(playerJson);
         var aiTeam = JsonSerializer.Deserialize<List<CurrentTeam_DTO>>(aiJson);
 
-        if (requireSwitch)
+        if (request.RequireSwitch)
         {
-            var playerMovesTask = _pokeApiService.GetPokemonMovesAsync(playerTeam[activeSlot1].Name);
-            var aiMovesTask = _pokeApiService.GetPokemonMovesAsync(aiTeam[activeSlot2].Name);
+            var playerMovesTask = _pokeApiService.GetPokemonMovesAsync(playerTeam[request.ActiveSlot1].Name);
+            var aiMovesTask = _pokeApiService.GetPokemonMovesAsync(aiTeam[request.ActiveSlot2].Name);
             await Task.WhenAll(playerMovesTask, aiMovesTask);
 
             return new BattleViewModel
             {
                 PlayerTeam = playerTeam,
                 AITeam = aiTeam,
-                PlayerActiveIndex = activeSlot1,
-                AIActiveIndex = activeSlot2,
-                PlayerCurrentHP = pokemon1CurrentHP,
-                AICurrentHP = pokemon2CurrentHP,
-                PlayerPreviousHP = previousPlayerHP,
-                AIPreviousHP = previousAIHP,
+                PlayerActiveIndex = request.ActiveSlot1,
+                AIActiveIndex = request.ActiveSlot2,
+                PlayerCurrentHP = request.Pokemon1CurrentHP,
+                AICurrentHP = request.Pokemon2CurrentHP,
+                PlayerPreviousHP = request.PreviousPlayerHP,
+                AIPreviousHP = request.PreviousAIHP,
                 PlayerMoves = playerMovesTask.Result,
                 AIMoves = aiMovesTask.Result,
-                PlayerStatus = pokemon1Status,
-                AIStatus = pokemon2Status,
-                PlayerSleepCounter = pokemon1SleepCounter,
-                AISleepCounter = pokemon2SleepCounter,
-                BattleLog = battleLog,
+                PlayerStatus = request.Pokemon1Status,
+                AIStatus = request.Pokemon2Status,
+                PlayerSleepCounter = request.Pokemon1SleepCounter,
+                AISleepCounter = request.Pokemon2SleepCounter,
+                BattleLog = request.BattleLog,
                 IsPlayerTurn = false,
                 BattleOver = false,
                 RequireSwitch = true
             };
         }
 
-        var p1 = playerTeam[activeSlot1];
-        var p2 = aiTeam[activeSlot2];
+        var p1 = playerTeam[request.ActiveSlot1];
+        var p2 = aiTeam[request.ActiveSlot2];
 
         var p1MovesTask = _pokeApiService.GetPokemonMovesAsync(p1.Name);
         var p2MovesTask = _pokeApiService.GetPokemonMovesAsync(p2.Name);
@@ -358,26 +336,26 @@ public class BattleService : IBattleService
         var p1Moves = p1MovesTask.Result;
         var p2Moves = p2MovesTask.Result;
 
-        int p1PrevHP = pokemon1CurrentHP;
-        int p2PrevHP = pokemon2CurrentHP;
+        int p1PrevHP = request.Pokemon1CurrentHP;
+        int p2PrevHP = request.Pokemon2CurrentHP;
 
         var model = new BattleViewModel
         {
             PlayerTeam = playerTeam,
             AITeam = aiTeam,
-            PlayerActiveIndex = activeSlot1,
-            AIActiveIndex = activeSlot2,
-            PlayerCurrentHP = pokemon1CurrentHP,
-            AICurrentHP = pokemon2CurrentHP,
+            PlayerActiveIndex = request.ActiveSlot1,
+            AIActiveIndex = request.ActiveSlot2,
+            PlayerCurrentHP = request.Pokemon1CurrentHP,
+            AICurrentHP = request.Pokemon2CurrentHP,
             PlayerPreviousHP = p1PrevHP,
             AIPreviousHP = p2PrevHP,
             PlayerMoves = p1Moves,
             AIMoves = p2Moves,
-            PlayerStatus = pokemon1Status,
-            AIStatus = pokemon2Status,
-            PlayerSleepCounter = pokemon1SleepCounter,
-            AISleepCounter = pokemon2SleepCounter,
-            BattleLog = battleLog,
+            PlayerStatus = request.Pokemon1Status,
+            AIStatus = request.Pokemon2Status,
+            PlayerSleepCounter = request.Pokemon1SleepCounter,
+            AISleepCounter = request.Pokemon2SleepCounter,
+            BattleLog = request.BattleLog,
             IsPlayerTurn = false,
             BattleOver = false,
             RequireSwitch = false
@@ -453,6 +431,7 @@ public class BattleService : IBattleService
 
         return model;
     }
+
 
     public int CalculateDamage(CurrentTeam_DTO attacker, CurrentTeam_DTO defender, int movePower, string moveType, bool isSpecial)
     {
