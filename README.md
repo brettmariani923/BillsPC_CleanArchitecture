@@ -45,14 +45,19 @@ This app is built around **Clean Architecture**, which separates responsibilitie
 
 Client (View)
 ↓
+
 Controller (Web Layer)
 ↓
+
 Abstraction (Interfaces)
 ↓
+
 Implementation (Services)
 ↓
+
 Requests (SQL Queries)
 ↓
+
 Database (SQL Server)
 
 -
