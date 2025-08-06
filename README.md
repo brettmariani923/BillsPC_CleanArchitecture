@@ -250,13 +250,21 @@ This is where the controller facciltates getting the data it needs. For example,
 ##Things covered by this project that we learned in CS50
 
 -MVC
+
 -Routing
+
 -HTML & Templating
+
 -Server Side Programming
+
 -SQL Querying 
+
 -Databases
+
 -Separation of Concerns
+
 -Forms and HTTP Requests
+
 -Project Structuring
     
 ## Feedback
