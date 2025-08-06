@@ -60,7 +60,7 @@ Requests (SQL Queries)
 
 Database (SQL Server)
 
--
+
 ---
 //Part 1 (very beginning): This is where it starts. We start by making our call to PokemonService.
 //A user on one of the view pages will press a search button or the info tab, and this is where the process of getting them the info they request begins.
@@ -270,7 +270,5 @@ This is where the controller facciltates getting the data it needs. For example,
 ## Feedback
     
 For questions or feedback, reach out via [Discord](https://discord.com/channels/brett_mariani/).
-    
-    ---
 
 Thanks for looking!
