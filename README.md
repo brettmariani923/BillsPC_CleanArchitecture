@@ -63,8 +63,11 @@ Database (SQL Server)
 
 ---
 //Part 1 (very beginning): This is where it starts. We start by making our call to PokemonService.
+
 //A user on one of the view pages will press a search button or the info tab, and this is where the process of getting them the info they request begins.
-//A good thing to repokemon is that views move through controllers, and controllers move through services. The controller 
+
+//A good thing to remember is that views move through controllers, and controllers move through services. The controller 
+
 //is your entrypoint, it accepts requests and returns ressponses. Go to PokemonService.cs in the Application layer next for the next step in the process.
 
      public async Task<IActionResult> ReturnAllPokemon()
@@ -74,11 +77,17 @@ Database (SQL Server)
      }
 
 This is where the controller facciltates getting the data it needs. For example, using the GetAllPokemonWithImagesAsync method (last method down below),
+
 //once the user has pressed The "View All Pokemon" button on the webpage and caused a get request, it causes the controller to call to the service layer(here).
+
 //The service layer will then call the data layer(to ReturnAllPokemonRequest in the requests folder) to make a request to get the data it needs from the database. So to sum it all up so far,
+
 //the View All Pokemon button will call the controller, which calls the services layer(you are here). The next step will then be be to access the data layer to load all the pokemon,
+
 //and call the PokeApiService to get the images for each pokemon (using the AddImagesToPokemonListAsync method below), and then return the list of pokemon with images to the controller,
+
 //which will then return it to a new webpage(view) for the user. We will cover this more in the next steps, if it seems like a lot right now it will become clearer as you go.
+
 //go to ReturnAllPokemonRequest.cs in the Data layer next to see how the data access layer is called to get the data we need.
 
 
@@ -91,16 +100,22 @@ This is where the controller facciltates getting the data it needs. For example,
     }
 
   // This class holds the a SQL request object we are going to use to retrieve the data we need from the database. 
-    // It doesnt execute the query itself, it just provides the SQL command and any parameters needed for the query.
-    // It has to go the data access layer first to execute the query and return the results.
+
+// It doesnt execute the query itself, it just provides the SQL command and any parameters needed for the query.
+
+// It has to go the data access layer first to execute the query and return the results.
 
   // So to reiterate where we are in the process, the "View All Pokémon" button is pressed, get request --> controller --> service layer --> data request (You are here)
-    // and then after this request object (ReturnAllPokemonRequest) is created, it then gets passed to the data access class to actually return the results.
-    // Inside DataAccess, it gets handled by the FetchListAsync<T> method, which executes the query using Dapper and returns it as a list of results.
+
+// and then after this request object (ReturnAllPokemonRequest) is created, it then gets passed to the data access class to actually return the results.
+
+// Inside DataAccess, it gets handled by the FetchListAsync<T> method, which executes the query using Dapper and returns it as a list of results.
 
   // If you're wondering how or why this connects to the DataAccess class: the methods GetSql() and GetParameters() are defined 
-    // by the IDataFetchList<T> interface. Since ReturnAllPokemonRequest implements this interface, the DataAccess class knows how to retrieve the SQL and parameters from it and execute the query
-    // which we will go over more in the next step.
+
+// by the IDataFetchList<T> interface. Since ReturnAllPokemonRequest implements this interface, the DataAccess class knows how to retrieve the SQL and parameters from it and execute the query
+
+// which we will go over more in the next step.
 
   // Go to the DataAccess class in the Implementation folder next to see how this request is executed.
 
@@ -117,20 +132,30 @@ This is where the controller facciltates getting the data it needs. For example,
       }
 
  // The DataAccess class is responsible for actually executing the SQL commands using Dapper. It doesn't define the queries itself, it gets those from the request objects(in this case ReturnAllPokemonRequest)
+
  // that implement interfaces like IDataFetchList<T>, IDataFetch<T>, or IDataExecute.
  //
+ 
  // In the example we've been using, the ReturnAllPokemonRequest class implements IDataFetchList<Pokemon_DTO>, which provides the GetSql() and GetParameters() methods. The definitions for the SQL query and parameters(SELECT * FROM dbo.pokemon, null) are what that will be used in this step.
- // Now that they've been defined, the FetchListAsync method below (last in Public IdataAcess methods below) takes that request, retrieves the SQL and parameters via the interface, and uses Dapper's QueryAsync<T>() to actually execute it and return the pokemon info
- // we asked for. So to reiterate where we are in the process,
+ 
+ // Now that they've been defined, the FetchListAsync method below (last in Public IdataAcess methods below) takes that request, retrieves the SQL and parameters via the interface, and uses Dapper's QueryAsync<T>() to actually execute it and return the pokemon info we asked for. So to reiterate where we are in the process,
+ 
  // the "View All Pokémon" button is pressed, get request --> controller (ReturnAllPokemon()) --> service layer (GetAllPokemonWithImagesAsync())--> data request (ReturnAllPokemonRequest) --> data access layer (You are here, FetchListAsync<TResponse>)
+ 
  // --> Dapper executes the query and returns the results.
  //
+ 
  // This might seem overly complicated or like a huge pain, but by setting it up like this it separates the query definition (ReturnAllPokemonRequest) from the query execution (DataAccess). By doing it like this, we have a separation of concerns that we dont get in other patterns.
+ 
  // it ends up being a lot more flexible, maintainable, and most of all its a lot safer. Because the SQL statement is separated from the execution logic, it keeps responsibilities clearly divided and makes it easier to maintain.
+ 
  // Only known request types are allowed to use the DataAccess class, which is a lot safer than just having it all in one place where any code could execute any SQL command. 
  //
+ 
  //Breifly I want to go over the Pokemon_DTO class, I dont think it warrants an entire visit. Its basically just the data structure of a Pokémon in the application. It contains properties like Id, Name, Type, and ImageUrl, that are populated by the database, and used to transfer that data
+ 
  //from the database to our website. If you have any questions about it, feel free to ask me about it in on discord and we can go over it more.
+ 
  // Now that we have safely recieved the data we need, we can return to the PokemonService class in the Application layer to see how it uses this data.
 
           public async Task<IEnumerable<TResponse>> FetchListAsync<TResponse>(IDataFetchList<TResponse> request) => await HandleRequest(async _ => await _.QueryAsync<TResponse>(request.GetSql(), request.GetParameters()));
@@ -147,7 +172,9 @@ This is where the controller facciltates getting the data it needs. For example,
      }
 
 //PART 2(***read after DataAccess.cs section***): Hello again! For our example method GetAllPokemonWithImagesAsync, we left this class to to go to the ReturnAllPokemonRequest() class, which took us to the dataaccess class, which returned the info we needed.
+
 // So to reiterate, we went through * var request = new ReturnAllPokemonRequest(); *, and that took us to the DataAccess class, which executed the SQL query and returned the results finishing * var result = await _dataAccess.FetchListAsync<Pokemon_DTO>(request); *.
+
 // so the for the last step, we just need to get the images for each pokemon. This is done using the AddImagesToPokemonListAsync() method here, which goes to the PokeApiService class, which will fetch the images from the PokeAPI and save them to our local server.
 
     public async Task<List<Pokemon_DTO>> GetAllPokemonWithImagesAsync()
@@ -159,8 +186,11 @@ This is where the controller facciltates getting the data it needs. For example,
     }
 
 //Part 3) Now the AddImagesToPokemonListAsync method will take the list of Pokemon_DTO objects and fetch the images for each one using the PokeApiService.
+
 // once that is finsished, we will have completed the final step of our method *  await AddImagesToPokemonListAsync(pokemon);  *
+
 // all that is left now to do is the *  return pokemon;  * line, which will return the list of Pokemon_DTO objects with their images to the controller, which will then return it to the view(webpage) for the user to see.
+
 // go back to PokemonController.cs in the Api layer for the final steps, to see how the controller handles the results and returns them to the view for the user to see.
 
     public async Task<List<Pokemon_DTO>> GetAllPokemonWithImagesAsync()
@@ -172,9 +202,13 @@ This is where the controller facciltates getting the data it needs. For example,
     }
 
 // This is where the results are returned to the view for the user to see. It takes that information we worked so hard to get from different layers and returns it to the view for the user to see.
+
 // So to break it down *  var allPokemon = await _pokemonService.GetAllPokemonWithImagesAsync();  * gets the data from the service layer, which is where we were during the previous step.
+
 // Once it has the information it needs, it returns it to the view using *  return View("ReturnAllPokemon", allPokemon);  *. This directs the information to the "ReturnAllPokemon" view, which is where the user will see the results of their request.
+
 // Great job! You've made it through the entire process of how the data flows from the user request to the final view. If you have any questions about this or any other part of the code, feel free to ask me on discord and we can go over it together.
+
 // If you are curious, look at the ReturnAllPokemon.cshtml file in the Views/Pokemon folder to see how the data is displayed on the webpage.
 
      public async Task<IActionResult> ReturnAllPokemon()
